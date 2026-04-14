@@ -61,9 +61,16 @@ function build(doc, d, photos) {
 
   doc.moveDown(0.5);
 
+  const v = d.vehicleInfo || {};
   section(doc, 'Vehicle', [
     ['Registration', d.vehicle_registration],
     ['VIN',          d.vin],
+    ['Make',         v.make   || '—'],
+    ['Model',        v.model  || '—'],
+    ['Year',         v.year   || '—'],
+    ['Colour',       v.colour || '—'],
+    ['Fuel Type',    v.fuelType || '—'],
+    ['Data Source',  v.source || '—'],
   ]);
 
   doc.moveDown(0.5);

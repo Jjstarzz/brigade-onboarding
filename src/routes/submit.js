@@ -22,6 +22,7 @@ const crypto  = require('crypto');
 const { validateSubmission } = require('../middleware/validate');
 const { generateCertificate } = require('../services/pdfService');
 const { sendConfirmation }    = require('../services/emailService');
+const { lookupVehicle }       = require('../services/vehicleLookup');
 const db = require('../db');
 
 const router = express.Router();
@@ -102,7 +103,10 @@ router.post('/', (req, res, next) => {
       }
 
       try {
-        // ── 4. Save record ───────────────────────────────────────────────
+        // ── 4a. Vehicle lookup (non-blocking — won't fail submission) ────
+        const vehicleInfo = await lookupVehicle(d.vehicle_registration, d.vin);
+
+        // ── 4b. Save record ──────────────────────────────────────────────
         await db.insert({
           onboarding_id:        onboardingId,
           product_type:         d.product_type,
@@ -122,11 +126,17 @@ router.post('/', (req, res, next) => {
           comments:             d.comments,
           photos_folder:        uploadFolder,
           pdf_path:             '',
+          vehicle_make:         vehicleInfo.make,
+          vehicle_model:        vehicleInfo.model,
+          vehicle_year:         vehicleInfo.year,
+          vehicle_colour:       vehicleInfo.colour,
+          vehicle_fuel_type:    vehicleInfo.fuelType,
+          vehicle_lookup_source: vehicleInfo.source,
         });
 
         // ── 5. Generate PDF ──────────────────────────────────────────────
         const pdfBuffer = await generateCertificate(
-          { ...d, onboarding_id: onboardingId },
+          { ...d, onboarding_id: onboardingId, vehicleInfo },
           photoPaths
         );
 
@@ -135,7 +145,7 @@ router.post('/', (req, res, next) => {
         await db.updatePdfPath(onboardingId, pdfPath);
 
         // ── 6. Email (non-blocking) ──────────────────────────────────────
-        sendConfirmation({ ...d, onboarding_id: onboardingId }, pdfBuffer, photoPaths)
+        sendConfirmation({ ...d, onboarding_id: onboardingId, vehicleInfo }, pdfBuffer, photoPaths)
           .catch((err) => console.error(JSON.stringify({
             ts: new Date().toISOString(), level: 'error',
             msg: 'Email delivery failed', id: onboardingId, error: err.message,

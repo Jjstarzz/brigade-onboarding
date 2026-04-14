@@ -57,6 +57,9 @@ async function sendConfirmation(data, pdfBuffer, photoPaths) {
 }
 
 function buildHtml(d) {
+  const v = d.vehicleInfo || {};
+  const vehicleDesc = [v.year, v.make, v.model].filter(Boolean).join(' ') || '—';
+
   return `<!DOCTYPE html><html lang="en"><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
   <div style="background:#003087;color:#fff;padding:20px;border-radius:4px 4px 0 0">
     <h1 style="margin:0;font-size:20px">Brigade Electronics</h1>
@@ -66,14 +69,17 @@ function buildHtml(d) {
     <p>Dear ${d.installer_name},</p>
     <p>Your installation has been recorded. The PDF certificate and photos are attached.</p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0">
-      ${row('Reference ID', d.onboarding_id, true)}
-      ${row('Product', d.product_type)}
-      ${row('Vehicle', d.vehicle_registration, true)}
-      ${row('VIN', d.vin)}
-      ${row('Fleet/Company', d.fleet_company, true)}
-      ${row('Depot', d.depot)}
-      ${row('Install Date', d.installation_date, true)}
-      ${row('Installer', `${d.installer_name} (${d.installer_company})`)}
+      ${row('Reference ID',   d.onboarding_id, true)}
+      ${row('Product',        d.product_type)}
+      ${row('Registration',   d.vehicle_registration, true)}
+      ${row('Vehicle',        vehicleDesc)}
+      ${row('Colour',         v.colour || '—', true)}
+      ${row('Fuel Type',      v.fuelType || '—')}
+      ${row('VIN',            d.vin, true)}
+      ${row('Fleet/Company',  d.fleet_company)}
+      ${row('Depot',          d.depot, true)}
+      ${row('Install Date',   d.installation_date)}
+      ${row('Installer',      `${d.installer_name} (${d.installer_company})`, true)}
     </table>
     ${d.comments ? `<p><strong>Comments:</strong> ${d.comments}</p>` : ''}
     <p style="font-size:12px;color:#666;margin-top:20px">
