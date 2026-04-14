@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Brigade Electronics vehicle installation onboarding form">
+  <meta name="theme-color" content="#003087">
+  <title>Brigade Electronics — Vehicle Installation Onboarding</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ── Header ───────────────────────────────────────────────────────────── -->
+  <header class="site-header" role="banner">
+    <div class="header-logo" aria-hidden="true">BE</div>
+    <div>
+      <h1>Brigade Electronics</h1>
+      <p>Vehicle Installation Onboarding</p>
+    </div>
+  </header>
+
+  <!-- ── Spinner overlay ──────────────────────────────────────────────────── -->
+  <div class="spinner-overlay" id="spinner" role="status" aria-live="polite" aria-label="Processing submission">
+    <div class="spinner"></div>
+    <p class="spinner-msg" id="spinner-msg">Submitting installation data…</p>
+  </div>
+
+  <main>
+
+    <!-- ── Progress bar ───────────────────────────────────────────────────── -->
+    <nav class="progress-bar" id="progress-bar" aria-label="Form progress">
+      <div class="step-indicator active" id="step-1-ind">
+        <div class="step-circle">1</div>
+        <span class="step-label">Device</span>
+      </div>
+      <div class="step-indicator" id="step-2-ind">
+        <div class="step-circle">2</div>
+        <span class="step-label">Vehicle</span>
+      </div>
+      <div class="step-indicator" id="step-3-ind">
+        <div class="step-circle">3</div>
+        <span class="step-label">Photos</span>
+      </div>
+      <div class="step-indicator" id="step-4-ind">
+        <div class="step-circle">4</div>
+        <span class="step-label">Fleet</span>
+      </div>
+      <div class="step-indicator" id="step-5-ind">
+        <div class="step-circle">5</div>
+        <span class="step-label">Installer</span>
+      </div>
+    </nav>
+
+    <!-- ── Alert banner ───────────────────────────────────────────────────── -->
+    <div class="alert alert-error" id="alert-error" role="alert"></div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         PAGE 1 — Device / Product Information
+    ════════════════════════════════════════════════════════════════════════ -->
+    <form id="onboarding-form" novalidate>
+
+      <section class="form-page active card" id="page-1" aria-labelledby="page1-heading">
+        <h2 id="page1-heading">Device &amp; Product Information</h2>
+
+        <!-- Product Type -->
+        <div class="form-group">
+          <label for="product_type">Product Type <span class="required">*</span></label>
+          <select id="product_type" name="product_type" required>
+            <option value="" disabled selected>— Select product —</option>
+            <option value="MDR 504">MDR 504</option>
+            <option value="MDR 508">MDR 508</option>
+            <option value="MDR 641">MDR 641</option>
+            <option value="MDR 644">MDR 644</option>
+            <option value="DC-204-AI">DC-204-AI</option>
+            <option value="CGLite">CGLite</option>
+          </select>
+          <span class="field-error" id="err-product_type"></span>
+        </div>
+
+        <!-- SIM Number -->
+        <div class="form-group">
+          <label for="sim_number">
+            SIM Number <span class="required">*</span>
+            <span class="hint">(exactly 19 digits)</span>
+          </label>
+          <input
+            type="text"
+            id="sim_number"
+            name="sim_number"
+            inputmode="numeric"
+            maxlength="19"
+            pattern="\d{19}"
+            autocomplete="off"
+            placeholder="8944XXXXXXXXXXXXXXX"
+            required
+          >
+          <span class="field-error" id="err-sim_number"></span>
+        </div>
+
+        <!-- Device ID -->
+        <div class="form-group">
+          <label for="device_id">Device ID <span class="required">*</span></label>
+          <input
+            type="text"
+            id="device_id"
+            name="device_id"
+            maxlength="50"
+            autocomplete="off"
+            placeholder="e.g. MDR-00123456"
+            required
+          >
+          <span class="field-error" id="err-device_id"></span>
+        </div>
+
+        <!-- Camera -->
+        <div class="form-group">
+          <label>Camera Fitted <span class="required">*</span></label>
+          <div class="toggle-group" role="group" aria-labelledby="camera-label">
+            <button type="button" class="toggle-btn" id="camera-yes" onclick="setCamera('Yes')">Yes</button>
+            <button type="button" class="toggle-btn" id="camera-no"  onclick="setCamera('No')">No</button>
+          </div>
+          <input type="hidden" id="camera" name="camera" required>
+          <span class="field-error" id="err-camera"></span>
+        </div>
+
+        <!-- Camera Channels (shown when camera = Yes) -->
+        <div id="camera-channels" class="card" style="background:#f9fbff;box-shadow:none;padding:16px;border:1px solid #d0e0f5" aria-live="polite">
+          <h2 style="margin-bottom:14px">Camera Channels</h2>
+          <div id="camera-channels-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+            <div class="form-group" id="group-channel_1">
+              <label for="channel_1">Channel 1 <span class="required">*</span></label>
+              <select id="channel_1" name="channel_1"><option value="" disabled selected>— Select —</option></select>
+              <span class="field-error" id="err-channel_1"></span>
+            </div>
+
+            <div class="form-group" id="group-channel_2">
+              <label for="channel_2">Channel 2 <span class="required">*</span></label>
+              <select id="channel_2" name="channel_2"><option value="" disabled selected>— Select —</option></select>
+              <span class="field-error" id="err-channel_2"></span>
+            </div>
+
+            <div class="form-group" id="group-channel_3">
+              <label for="channel_3">Channel 3 <span class="required">*</span></label>
+              <select id="channel_3" name="channel_3"><option value="" disabled selected>— Select —</option></select>
+              <span class="field-error" id="err-channel_3"></span>
+            </div>
+
+            <div class="form-group" id="group-channel_4">
+              <label for="channel_4">Channel 4 <span class="required">*</span></label>
+              <select id="channel_4" name="channel_4"><option value="" disabled selected>— Select —</option></select>
+              <span class="field-error" id="err-channel_4"></span>
+            </div>
+
+            <div class="form-group" id="group-channel_5">
+              <label for="channel_5">Channel 5 <span class="required">*</span></label>
+              <select id="channel_5" name="channel_5"><option value="" disabled selected>— Select —</option></select>
+              <span class="field-error" id="err-channel_5"></span>
+            </div>
+
+            <div class="form-group" id="group-channel_6">
+              <label for="channel_6">Channel 6 <span class="required">*</span></label>
+              <select id="channel_6" name="channel_6"><option value="" disabled selected>— Select —</option></select>
+              <span class="field-error" id="err-channel_6"></span>
+            </div>
+
+            <div class="form-group" id="group-channel_7">
+              <label for="channel_7">Channel 7 <span class="required">*</span></label>
+              <select id="channel_7" name="channel_7"><option value="" disabled selected>— Select —</option></select>
+              <span class="field-error" id="err-channel_7"></span>
+            </div>
+
+            <div class="form-group" id="group-channel_8">
+              <label for="channel_8">Channel 8 <span class="required">*</span></label>
+              <select id="channel_8" name="channel_8"><option value="" disabled selected>— Select —</option></select>
+              <span class="field-error" id="err-channel_8"></span>
+            </div>
+
+            <div class="form-group" id="group-channel_9" style="grid-column:1/-1">
+              <label for="channel_9">Channel 9 <span class="required">*</span></label>
+              <select id="channel_9" name="channel_9"><option value="" disabled selected>— Select —</option></select>
+              <span class="field-error" id="err-channel_9"></span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="form-nav">
+          <button type="button" class="btn btn-primary" onclick="goTo(2)">Next: Vehicle Details &rarr;</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           PAGE 2 — Vehicle Details
+      ════════════════════════════════════════════════════════════════════ -->
+      <section class="form-page card" id="page-2" aria-labelledby="page2-heading">
+        <h2 id="page2-heading">Vehicle Details</h2>
+
+        <!-- Vehicle Registration -->
+        <div class="form-group">
+          <label for="vehicle_registration">
+            Vehicle Registration <span class="required">*</span>
+            <span class="hint">(UK format, no spaces)</span>
+          </label>
+          <input
+            type="text"
+            id="vehicle_registration"
+            name="vehicle_registration"
+            maxlength="7"
+            autocomplete="off"
+            placeholder="e.g. BD51SMR"
+            style="text-transform:uppercase"
+            required
+          >
+          <span class="field-error" id="err-vehicle_registration"></span>
+        </div>
+
+        <!-- VIN -->
+        <div class="form-group">
+          <label for="vin">
+            VIN <span class="required">*</span>
+            <span class="hint">(exactly 17 chars, no I/O/Q)</span>
+          </label>
+          <input
+            type="text"
+            id="vin"
+            name="vin"
+            maxlength="17"
+            autocomplete="off"
+            placeholder="e.g. WBA3A5G5XDNS09522"
+            style="text-transform:uppercase"
+            required
+          >
+          <span class="field-error" id="err-vin"></span>
+        </div>
+
+        <div class="form-nav">
+          <button type="button" class="btn btn-secondary" onclick="goTo(1)">&larr; Back</button>
+          <button type="button" class="btn btn-primary" onclick="goTo(3)">Next: Photos &rarr;</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           PAGE 3 — Photos
+      ════════════════════════════════════════════════════════════════════ -->
+      <section class="form-page card" id="page-3" aria-labelledby="page3-heading">
+        <h2 id="page3-heading">Installation Photos</h2>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">
+          All 5 photos are required. Max 10&nbsp;MB each. JPG, PNG, or HEIC.
+        </p>
+
+        <div class="photo-upload-grid">
+
+          <div class="form-group">
+            <label>System Photo <span class="required">*</span></label>
+            <div class="upload-area" id="ua-system_photo">
+              <input type="file" id="system_photo" name="system_photo" accept="image/jpeg,image/png,image/heic,.heic" required>
+              <div class="upload-icon">📷</div>
+              <div class="upload-label-text">Tap to upload</div>
+              <img class="upload-preview" id="prev-system_photo" alt="System photo preview">
+              <div class="upload-filename" id="fn-system_photo"></div>
+            </div>
+            <span class="field-error" id="err-system_photo"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Network Photo <span class="required">*</span></label>
+            <div class="upload-area" id="ua-network_photo">
+              <input type="file" id="network_photo" name="network_photo" accept="image/jpeg,image/png,image/heic,.heic" required>
+              <div class="upload-icon">📷</div>
+              <div class="upload-label-text">Tap to upload</div>
+              <img class="upload-preview" id="prev-network_photo" alt="Network photo preview">
+              <div class="upload-filename" id="fn-network_photo"></div>
+            </div>
+            <span class="field-error" id="err-network_photo"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Server Photo <span class="required">*</span></label>
+            <div class="upload-area" id="ua-server_photo">
+              <input type="file" id="server_photo" name="server_photo" accept="image/jpeg,image/png,image/heic,.heic" required>
+              <div class="upload-icon">📷</div>
+              <div class="upload-label-text">Tap to upload</div>
+              <img class="upload-preview" id="prev-server_photo" alt="Server photo preview">
+              <div class="upload-filename" id="fn-server_photo"></div>
+            </div>
+            <span class="field-error" id="err-server_photo"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Registration Plate Photo <span class="required">*</span></label>
+            <div class="upload-area" id="ua-registration_photo">
+              <input type="file" id="registration_photo" name="registration_photo" accept="image/jpeg,image/png,image/heic,.heic" required>
+              <div class="upload-icon">📷</div>
+              <div class="upload-label-text">Tap to upload</div>
+              <img class="upload-preview" id="prev-registration_photo" alt="Registration photo preview">
+              <div class="upload-filename" id="fn-registration_photo"></div>
+            </div>
+            <span class="field-error" id="err-registration_photo"></span>
+          </div>
+
+          <div class="form-group">
+            <label>VIN Plate Photo <span class="required">*</span></label>
+            <div class="upload-area" id="ua-vin_photo">
+              <input type="file" id="vin_photo" name="vin_photo" accept="image/jpeg,image/png,image/heic,.heic" required>
+              <div class="upload-icon">📷</div>
+              <div class="upload-label-text">Tap to upload</div>
+              <img class="upload-preview" id="prev-vin_photo" alt="VIN photo preview">
+              <div class="upload-filename" id="fn-vin_photo"></div>
+            </div>
+            <span class="field-error" id="err-vin_photo"></span>
+          </div>
+
+        </div>
+
+        <div class="form-nav">
+          <button type="button" class="btn btn-secondary" onclick="goTo(2)">&larr; Back</button>
+          <button type="button" class="btn btn-primary" onclick="goTo(4)">Next: Fleet &rarr;</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           PAGE 4 — Fleet / Company Details
+      ════════════════════════════════════════════════════════════════════ -->
+      <section class="form-page card" id="page-4" aria-labelledby="page4-heading">
+        <h2 id="page4-heading">Fleet &amp; Company Details</h2>
+
+        <div class="form-group">
+          <label for="fleet_company">Fleet / Company Name <span class="required">*</span></label>
+          <input type="text" id="fleet_company" name="fleet_company" maxlength="200" required placeholder="e.g. Acme Haulage Ltd">
+          <span class="field-error" id="err-fleet_company"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="depot">Depot <span class="required">*</span></label>
+          <input type="text" id="depot" name="depot" maxlength="200" required placeholder="e.g. Manchester North">
+          <span class="field-error" id="err-depot"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="installation_date">Installation Date <span class="required">*</span></label>
+          <input type="date" id="installation_date" name="installation_date" required>
+          <span class="field-error" id="err-installation_date"></span>
+        </div>
+
+        <div class="form-nav">
+          <button type="button" class="btn btn-secondary" onclick="goTo(3)">&larr; Back</button>
+          <button type="button" class="btn btn-primary" onclick="goTo(5)">Next: Installer &rarr;</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           PAGE 5 — Installer Details + Submit
+      ════════════════════════════════════════════════════════════════════ -->
+      <section class="form-page card" id="page-5" aria-labelledby="page5-heading">
+        <h2 id="page5-heading">Installer Details</h2>
+
+        <div class="form-group">
+          <label for="installer_name">Installer Name <span class="required">*</span></label>
+          <input type="text" id="installer_name" name="installer_name" maxlength="100" required autocomplete="name" placeholder="Full name">
+          <span class="field-error" id="err-installer_name"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="installer_company">Installer Company <span class="required">*</span></label>
+          <input type="text" id="installer_company" name="installer_company" maxlength="200" required placeholder="e.g. Fleet Tech Solutions">
+          <span class="field-error" id="err-installer_company"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="installer_mobile">Mobile Number <span class="required">*</span></label>
+          <input type="tel" id="installer_mobile" name="installer_mobile" maxlength="20" required autocomplete="tel" placeholder="+44 7700 900000">
+          <span class="field-error" id="err-installer_mobile"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="installer_email">Email Address <span class="required">*</span>
+            <span class="hint">(certificate sent here)</span>
+          </label>
+          <input type="email" id="installer_email" name="installer_email" maxlength="254" required autocomplete="email" placeholder="installer@example.com">
+          <span class="field-error" id="err-installer_email"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="comments">Comments <span class="hint">(optional)</span></label>
+          <textarea id="comments" name="comments" maxlength="1000" placeholder="Any additional notes…"></textarea>
+          <span class="field-error" id="err-comments"></span>
+        </div>
+
+        <div class="form-nav">
+          <button type="button" class="btn btn-secondary" onclick="goTo(4)">&larr; Back</button>
+          <button type="submit" class="btn btn-primary" id="submit-btn">Submit Installation</button>
+        </div>
+      </section>
+
+    </form>
+
+    <!-- ── Success screen ──────────────────────────────────────────────────── -->
+    <div id="success-screen" aria-live="polite">
+      <div class="success-icon">✅</div>
+      <h2>Installation Recorded</h2>
+      <p>Your reference number:</p>
+      <div id="success-ref"></div>
+      <p>A PDF certificate has been emailed to you and the Brigade Electronics team.</p>
+      <button class="btn btn-primary" onclick="resetForm()" style="max-width:260px;margin:auto">
+        Submit Another Installation
+      </button>
+    </div>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
