@@ -158,12 +158,7 @@ function validatePage(page) {
 
   for (const field of (PAGE_FIELDS[page] || [])) {
     if (PHOTO_FIELDS.includes(field)) {
-      const input = document.getElementById(field);
-      if (!input?.files?.length) {
-        showError(field, 'This photo is required.'); valid = false;
-      } else {
-        clearError(field);
-      }
+      // Photos are optional — skip validation
       continue;
     }
     const el = document.getElementById(field);

@@ -61,10 +61,7 @@ function validateSubmission(req, res, next) {
   if (!b.installer_email || !/^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/.test(b.installer_email.trim()))
     errors.push('Installer email must be a valid email address.');
 
-  for (const field of PHOTO_FIELDS) {
-    if (!req.files?.[field]?.[0])
-      errors.push(`${field} is required.`);
-  }
+  // Photos are optional — OCR and PDF will simply omit missing images
 
   if (errors.length) {
     const err = new Error(errors.join(' | '));
