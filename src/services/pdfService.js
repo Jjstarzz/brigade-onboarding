@@ -12,7 +12,7 @@ const BLUE  = '#003087';
 const GREY  = '#4a4a4a';
 const LIGHT = '#f0f4fb';
 
-async function generateCertificate(data, photoPaths) {
+async function generateCertificate(data, photoPaths, ocrResults = {}) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: 'A4', margin: 50,
@@ -28,7 +28,7 @@ async function generateCertificate(data, photoPaths) {
     doc.on('end',  () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    try { build(doc, data, photoPaths); }
+    try { build(doc, data, photoPaths, ocrResults); }
     catch (err) { reject(err); }
 
     doc.end();
@@ -36,7 +36,7 @@ async function generateCertificate(data, photoPaths) {
 }
 
 // ── Build document ─────────────────────────────────────────────────────────────
-function build(doc, d, photos) {
+function build(doc, d, photos, ocrResults) {
   // Header
   doc.rect(50, 40, doc.page.width - 100, 60).fill(BLUE);
   doc.fontSize(18).fillColor('#fff').text('Brigade Electronics', 65, 52, { continued: true });
@@ -95,25 +95,66 @@ function build(doc, d, photos) {
     doc.fontSize(10).fillColor(GREY).text(d.comments);
   }
 
-  // Photos — 2 per page
+  // Photos — 2 per page, with OCR text block beneath each image
+  // Layout per slot (A4 usable height ~742pt):
+  //   Slot 0: label y=44, image y=60  fit=[495,250], OCR block y=315 h≤80
+  //   Slot 1: label y=414, image y=430 fit=[495,250], OCR block y=685 h≤80
   const photoEntries = [
-    ['System Photo',       photos.system_photo],
-    ['Network Photo',      photos.network_photo],
-    ['Server Photo',       photos.server_photo],
-    ['Registration Photo', photos.registration_photo],
-    ['VIN Photo',          photos.vin_photo],
-  ].filter(([, p]) => p && fs.existsSync(p));
+    ['System Photo',       'system_photo',       photos.system_photo],
+    ['Network Photo',      'network_photo',      photos.network_photo],
+    ['Server Photo',       'server_photo',       photos.server_photo],
+    ['Registration Photo', 'registration_photo', photos.registration_photo],
+    ['VIN Photo',          'vin_photo',          photos.vin_photo],
+  ].filter(([, , p]) => p && fs.existsSync(p));
 
   let slot = 0;
-  for (const [label, filePath] of photoEntries) {
+  for (const [label, field, filePath] of photoEntries) {
     if (slot % 2 === 0) { doc.addPage(); slot = 0; }
-    const y = slot === 0 ? 60 : 430;
-    doc.fontSize(11).fillColor(BLUE).text(label, 50, y - 16);
+
+    const labelY = slot === 0 ? 44  : 414;
+    const imgY   = slot === 0 ? 60  : 430;
+    const ocrY   = slot === 0 ? 315 : 685;
+
+    // Photo label
+    doc.fontSize(11).fillColor(BLUE).text(label, 50, labelY);
+
+    // Photo image
     try {
-      doc.image(filePath, 50, y, { fit: [495, 340], align: 'center' });
+      doc.image(filePath, 50, imgY, { fit: [495, 250], align: 'center' });
     } catch {
-      doc.fontSize(9).fillColor(GREY).text('[Image unavailable]', 50, y);
+      doc.fontSize(9).fillColor(GREY).text('[Image unavailable]', 50, imgY);
     }
+
+    // OCR text block
+    const ocr = ocrResults?.[field];
+    if (ocr && ocr.text) {
+      // Background box
+      doc.rect(50, ocrY, 495, 72).fill('#f8f9fa');
+      doc.rect(50, ocrY, 3,   72).fill(BLUE);   // left accent bar
+
+      // Label row
+      const confLabel = `Detected text  (confidence: ${ocr.confidence}%)`;
+      doc.fontSize(7).fillColor('#888').text(confLabel, 58, ocrY + 5, { width: 480 });
+
+      // Highlight any detected patterns inline
+      if (ocr.patterns.regPlate || ocr.patterns.vin) {
+        const tags = [];
+        if (ocr.patterns.regPlate) tags.push(`Reg: ${ocr.patterns.regPlate}`);
+        if (ocr.patterns.vin)      tags.push(`VIN: ${ocr.patterns.vin}`);
+        doc.fontSize(8).fillColor(BLUE)
+           .text(`⚑ Matched — ${tags.join('  ·  ')}`, 58, ocrY + 16, { width: 480 });
+      }
+
+      // Extracted text (capped to avoid overflow)
+      const textY   = (ocr.patterns.regPlate || ocr.patterns.vin) ? ocrY + 28 : ocrY + 16;
+      const maxText = ocr.text.length > 280 ? ocr.text.slice(0, 277) + '…' : ocr.text;
+      doc.fontSize(8).fillColor(GREY).text(maxText, 58, textY, { width: 480, lineGap: 1 });
+    } else {
+      // No text found — subtle placeholder
+      doc.rect(50, ocrY, 495, 22).fill('#f8f9fa');
+      doc.fontSize(7).fillColor('#bbb').text('No text detected in this image', 58, ocrY + 7);
+    }
+
     slot++;
   }
 

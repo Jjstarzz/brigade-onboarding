@@ -23,6 +23,7 @@ const { validateSubmission } = require('../middleware/validate');
 const { generateCertificate } = require('../services/pdfService');
 const { sendConfirmation }    = require('../services/emailService');
 const { lookupVehicle }       = require('../services/vehicleLookup');
+const { runOcr }              = require('../services/ocrService');
 const db = require('../db');
 
 const router = express.Router();
@@ -103,8 +104,17 @@ router.post('/', (req, res, next) => {
       }
 
       try {
-        // ── 4a. Vehicle lookup (non-blocking — won't fail submission) ────
-        const vehicleInfo = await lookupVehicle(d.vehicle_registration, d.vin);
+        // ── 4a. Vehicle lookup + OCR — run in parallel ───────────────────
+        const [vehicleInfo, ocrResults] = await Promise.all([
+          lookupVehicle(d.vehicle_registration, d.vin),
+          runOcr(photoPaths).catch((err) => {
+            console.error(JSON.stringify({
+              ts: new Date().toISOString(), level: 'warn',
+              msg: 'OCR pipeline failed', error: err.message,
+            }));
+            return {};
+          }),
+        ]);
 
         // ── 4b. Save record ──────────────────────────────────────────────
         await db.insert({
@@ -137,7 +147,8 @@ router.post('/', (req, res, next) => {
         // ── 5. Generate PDF ──────────────────────────────────────────────
         const pdfBuffer = await generateCertificate(
           { ...d, onboarding_id: onboardingId, vehicleInfo },
-          photoPaths
+          photoPaths,
+          ocrResults
         );
 
         const pdfPath = path.join(uploadFolder, `${onboardingId}_certificate.pdf`);
@@ -145,7 +156,12 @@ router.post('/', (req, res, next) => {
         await db.updatePdfPath(onboardingId, pdfPath);
 
         // ── 6. Email (non-blocking) ──────────────────────────────────────
-        sendConfirmation({ ...d, onboarding_id: onboardingId, vehicleInfo }, pdfBuffer, photoPaths)
+        sendConfirmation(
+          { ...d, onboarding_id: onboardingId, vehicleInfo },
+          pdfBuffer,
+          photoPaths,
+          ocrResults
+        )
           .catch((err) => console.error(JSON.stringify({
             ts: new Date().toISOString(), level: 'error',
             msg: 'Email delivery failed', id: onboardingId, error: err.message,

@@ -7,7 +7,7 @@ const path    = require('path');
 const crypto  = require('crypto');
 
 // ── Validate required env vars before anything else ───────────────────────────
-const REQUIRED = ['EMAIL_USER', 'EMAIL_PASS', 'EMAIL_RECIPIENTS', 'ADMIN_PASSWORD'];
+const REQUIRED = ['SENDGRID_API_KEY', 'EMAIL_RECIPIENTS', 'ADMIN_PASSWORD'];
 const missing  = REQUIRED.filter((k) => !process.env[k]);
 if (missing.length) {
   console.error('Missing required environment variables:', missing.join(', '));
