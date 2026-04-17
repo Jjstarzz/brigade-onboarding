@@ -282,6 +282,7 @@ function resetForm() {
   document.getElementById('progress-bar').style.display = 'flex';
   document.getElementById('success-screen').classList.remove('visible');
   document.getElementById('alert-error').classList.remove('visible');
+  document.getElementById('submit-btn').disabled = false;
   document.getElementById('camera-channels').classList.remove('visible');
   document.getElementById('camera').value = '';
   document.getElementById('camera-yes').className = 'toggle-btn';
