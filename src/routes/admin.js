@@ -41,12 +41,23 @@ router.get('/', (req, res) => {
     <tr>
       <td>${r.created_at.slice(0, 10)}</td>
       <td><strong>${r.onboarding_id}</strong></td>
-      <td>${r.vehicle_registration}</td>
-      <td>${r.product_type}</td>
-      <td>${r.fleet_company}</td>
-      <td>${r.installer_name}</td>
-      <td>${r.installer_email}</td>
-      <td>${r.camera}</td>
+      <td>${r.vehicle_registration || '—'}</td>
+      <td>${r.vin || '—'}</td>
+      <td>${[r.vehicle_year, r.vehicle_make, r.vehicle_model].filter(Boolean).join(' ') || '—'}</td>
+      <td>${r.vehicle_colour || '—'}</td>
+      <td>${r.vehicle_fuel_type || '—'}</td>
+      <td>${r.product_type || '—'}</td>
+      <td>${r.sim_number || '—'}</td>
+      <td>${r.device_id || '—'}</td>
+      <td>${r.camera || '—'}</td>
+      <td>${r.fleet_company || '—'}</td>
+      <td>${r.depot || '—'}</td>
+      <td>${r.installation_date || '—'}</td>
+      <td>${r.installer_name || '—'}</td>
+      <td>${r.installer_company || '—'}</td>
+      <td>${r.installer_mobile || '—'}</td>
+      <td>${r.installer_email || '—'}</td>
+      <td>${r.comments || '—'}</td>
       <td>
         ${r.pdf_path && fs.existsSync(r.pdf_path)
           ? `<a href="/admin/pdf/${encodeURIComponent(r.onboarding_id)}">📄 PDF</a>`
@@ -92,13 +103,16 @@ router.get('/', (req, res) => {
     <table>
       <thead>
         <tr>
-          <th>Date</th><th>Reference</th><th>Reg</th><th>Product</th>
-          <th>Fleet/Company</th><th>Installer</th><th>Email</th>
-          <th>Camera</th><th>PDF</th>
+          <th>Date</th><th>Reference</th><th>Reg</th><th>VIN</th>
+          <th>Vehicle</th><th>Colour</th><th>Fuel</th>
+          <th>Product</th><th>SIM Number</th><th>Device ID</th><th>Camera</th>
+          <th>Fleet/Company</th><th>Depot</th><th>Install Date</th>
+          <th>Installer</th><th>Company</th><th>Mobile</th><th>Email</th>
+          <th>Comments</th><th>PDF</th>
         </tr>
       </thead>
       <tbody>
-        ${rows.length ? tableRows : '<tr><td colspan="9" class="empty">No submissions yet.</td></tr>'}
+        ${rows.length ? tableRows : '<tr><td colspan="20" class="empty">No submissions yet.</td></tr>'}
       </tbody>
     </table>
   </div>
