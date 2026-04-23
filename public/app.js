@@ -18,7 +18,7 @@ const VALIDATORS = {
   product_type:         (v) => v !== '',
   sim_number:           (v) => /^\d{19}$/.test(v),
   device_id:            (v) => /^[A-Za-z0-9_-]{1,50}$/.test(v),
-  vehicle_registration: (v) => /^[A-Z0-9]{2,7}$/.test(v.toUpperCase()),
+  vehicle_registration: (v) => v.trim().length > 0 && v.trim().length <= 15,
   vin:                  (v) => /^[A-HJ-NPR-Z0-9]{17}$/.test(v.toUpperCase()),
   camera:               (v) => v === 'Yes' || v === 'No',
   fleet_company:        (v) => v.trim().length > 0 && v.trim().length <= 200,
@@ -34,7 +34,7 @@ const ERROR_MESSAGES = {
   product_type:         'Please select a product type.',
   sim_number:           'SIM Number must be exactly 19 digits.',
   device_id:            'Device ID must be 1–50 alphanumeric characters.',
-  vehicle_registration: 'Enter a valid UK registration (2–7 letters/numbers, no spaces).',
+  vehicle_registration: 'Vehicle registration is required (max 15 characters).',
   vin:                  'VIN must be exactly 17 characters (A–Z, 0–9, no I/O/Q).',
   camera:               'Please select Yes or No for camera.',
   fleet_company:        'Fleet/Company Name is required.',
@@ -57,6 +57,7 @@ const PAGE_FIELDS = {
 // ── State ──────────────────────────────────────────────────────────────────────
 let currentPage = 1;
 let cameraValue = '';
+let channelCount = 0;
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -91,7 +92,26 @@ function setCamera(value) {
   document.getElementById('camera-yes').className = 'toggle-btn' + (value === 'Yes' ? ' selected-yes' : '');
   document.getElementById('camera-no').className  = 'toggle-btn' + (value === 'No'  ? ' selected-no'  : '');
   document.getElementById('camera-channels').classList.toggle('visible', value === 'Yes');
+  if (value !== 'Yes') {
+    channelCount = 0;
+    document.getElementById('channel_count').value = '';
+    document.getElementById('camera-channels-grid').style.display = 'none';
+    for (let i = 1; i <= 9; i++) clearError(`channel_${i}`);
+    clearError('channel_count');
+  }
   clearError('camera');
+}
+
+function setChannelCount(n) {
+  channelCount = parseInt(n, 10) || 0;
+  const grid = document.getElementById('camera-channels-grid');
+  grid.style.display = channelCount > 0 ? 'grid' : 'none';
+  for (let i = 1; i <= 9; i++) {
+    const group = document.getElementById(`group-channel_${i}`);
+    if (group) group.style.display = i <= channelCount ? '' : 'none';
+    if (i > channelCount) clearError(`channel_${i}`);
+  }
+  clearError('channel_count');
 }
 
 // ── Photo upload previews ──────────────────────────────────────────────────────
@@ -175,13 +195,19 @@ function validatePage(page) {
 
   // Channel validation on page 1
   if (page === 1 && cameraValue === 'Yes') {
-    for (let i = 1; i <= 9; i++) {
-      const sel = document.getElementById(`channel_${i}`);
-      if (!sel?.value) {
-        showError(`channel_${i}`, `Channel ${i} is required.`);
-        valid = false;
-      } else {
-        clearError(`channel_${i}`);
+    if (!channelCount) {
+      showError('channel_count', 'Please select the number of channels.');
+      valid = false;
+    } else {
+      clearError('channel_count');
+      for (let i = 1; i <= channelCount; i++) {
+        const sel = document.getElementById(`channel_${i}`);
+        if (!sel?.value) {
+          showError(`channel_${i}`, `Channel ${i} is required.`);
+          valid = false;
+        } else {
+          clearError(`channel_${i}`);
+        }
       }
     }
   }
@@ -279,10 +305,13 @@ function resetForm() {
   document.getElementById('alert-error').classList.remove('visible');
   document.getElementById('submit-btn').disabled = false;
   document.getElementById('camera-channels').classList.remove('visible');
+  document.getElementById('camera-channels-grid').style.display = 'none';
   document.getElementById('camera').value = '';
+  document.getElementById('channel_count').value = '';
   document.getElementById('camera-yes').className = 'toggle-btn';
   document.getElementById('camera-no').className  = 'toggle-btn';
   cameraValue = '';
+  channelCount = 0;
 
   PHOTO_FIELDS.forEach((field) => {
     document.getElementById(`ua-${field}`)?.classList.remove('has-file');

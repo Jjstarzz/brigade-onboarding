@@ -126,7 +126,23 @@
         <!-- Camera Channels (shown when camera = Yes) -->
         <div id="camera-channels" class="card" style="background:#f9fbff;box-shadow:none;padding:16px;border:1px solid #d0e0f5" aria-live="polite">
           <h2 style="margin-bottom:14px">Camera Channels</h2>
-          <div id="camera-channels-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group" id="group-channel_count" style="margin-bottom:16px">
+            <label for="channel_count">Number of channels <span class="required">*</span></label>
+            <select id="channel_count" name="channel_count" onchange="setChannelCount(this.value)">
+              <option value="" disabled selected>— Select —</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+            </select>
+            <span class="field-error" id="err-channel_count"></span>
+          </div>
+          <div id="camera-channels-grid" style="display:none;grid-template-columns:1fr 1fr;gap:12px">
 
             <div class="form-group" id="group-channel_1">
               <label for="channel_1">Channel 1 <span class="required">*</span></label>
@@ -200,15 +216,15 @@
         <div class="form-group">
           <label for="vehicle_registration">
             Vehicle Registration <span class="required">*</span>
-            <span class="hint">(UK format, no spaces)</span>
+            <span class="hint">(no spaces, max 15 characters)</span>
           </label>
           <input
             type="text"
             id="vehicle_registration"
             name="vehicle_registration"
-            maxlength="7"
+            maxlength="15"
             autocomplete="off"
-            placeholder="e.g. BD51SMR"
+            placeholder="e.g. BD51SMR or AB-123-CD"
             style="text-transform:uppercase"
             required
           >

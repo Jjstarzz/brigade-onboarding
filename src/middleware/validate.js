@@ -25,9 +25,9 @@ function validateSubmission(req, res, next) {
   if (!/^[A-Za-z0-9_-]{1,50}$/.test(b.device_id))
     errors.push('Device ID must be 1–50 alphanumeric characters.');
 
-  const reg = (b.vehicle_registration || '').trim().toUpperCase();
-  if (!/^[A-Z0-9]{2,7}$/.test(reg))
-    errors.push('Vehicle registration must be 2–7 uppercase alphanumeric, no spaces.');
+  const reg = (b.vehicle_registration || '').trim().toUpperCase().replace(/\s/g, '');
+  if (!reg || reg.length > 15 || !/^[A-Z0-9-]{1,15}$/.test(reg))
+    errors.push('Vehicle registration is required (max 15 characters, letters, numbers and hyphens only).');
 
   const vin = (b.vin || '').trim().toUpperCase();
   if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin))
@@ -38,12 +38,17 @@ function validateSubmission(req, res, next) {
 
   const channels = {};
   if (b.camera === 'Yes') {
-    for (let i = 1; i <= 9; i++) {
-      const ch = b[`channel_${i}`];
-      if (!ch || !CAMERA_CHANNELS.includes(ch))
-        errors.push(`Channel ${i} is required.`);
-      else
-        channels[`channel_${i}`] = ch;
+    const count = parseInt(b.channel_count, 10);
+    if (!count || count < 1 || count > 9)
+      errors.push('Number of channels must be between 1 and 9.');
+    else {
+      for (let i = 1; i <= count; i++) {
+        const ch = b[`channel_${i}`];
+        if (!ch || !CAMERA_CHANNELS.includes(ch))
+          errors.push(`Channel ${i} is required.`);
+        else
+          channels[`channel_${i}`] = ch;
+      }
     }
   }
 
