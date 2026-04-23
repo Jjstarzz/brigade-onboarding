@@ -80,6 +80,7 @@ router.post('/', (req, res, next) => {
   // before we know the vehicle registration.
   const folderToken = crypto.randomBytes(6).toString('hex');
   const uploadFolder = path.join(UPLOADS_ROOT, folderToken);
+  fs.mkdirSync(uploadFolder, { recursive: true });
   const upload = makeUpload(uploadFolder);
 
   upload(req, res, async (multerErr) => {
