@@ -35,6 +35,12 @@ function esc(str) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// For HTML attribute values only — empty string stays empty
+function escAttr(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
 function statusSelect(id, current) {
   const opts = STATUSES.map((s) => {
     const m = STATUS_META[s];
@@ -242,11 +248,11 @@ router.get('/', (req, res) => {
     <form class="filter-form" method="GET" action="/admin">
       <div class="filter-group">
         <label>From</label>
-        <input type="date" name="date_from" value="${esc(date_from || '')}">
+        <input type="date" name="date_from" value="${escAttr(date_from)}">
       </div>
       <div class="filter-group">
         <label>To</label>
-        <input type="date" name="date_to" value="${esc(date_to || '')}">
+        <input type="date" name="date_to" value="${escAttr(date_to)}">
       </div>
       <div class="filter-group">
         <label>Product</label>
@@ -257,11 +263,11 @@ router.get('/', (req, res) => {
       </div>
       <div class="filter-group">
         <label>Fleet / Company</label>
-        <input type="text" name="fleet_company" value="${esc(fleet_company || '')}" placeholder="Any">
+        <input type="text" name="fleet_company" value="${escAttr(fleet_company)}" placeholder="Any">
       </div>
       <div class="filter-group">
         <label>Installer</label>
-        <input type="text" name="installer" value="${esc(installer || '')}" placeholder="Any">
+        <input type="text" name="installer" value="${escAttr(installer)}" placeholder="Any">
       </div>
       <div class="filter-actions">
         <button type="submit" class="btn">Filter</button>
