@@ -1,0 +1,17 @@
+{
+  "name": "Brigade Electronics — Vehicle Onboarding",
+  "short_name": "Brigade Onboard",
+  "description": "Vehicle installation onboarding form for field installers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#003087",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="28" fill="#003087"/>
+  <text x="96" y="72" font-family="Arial,sans-serif" font-size="36" font-weight="700"
+    fill="#ffffff" text-anchor="middle" dominant-baseline="middle">BRIGADE</text>
+  <text x="96" y="118" font-family="Arial,sans-serif" font-size="22" font-weight="400"
+    fill="#99b8e8" text-anchor="middle" dominant-baseline="middle">ELECTRONICS</text>
+  <rect x="40" y="140" width="112" height="3" rx="1.5" fill="#99b8e8" opacity="0.5"/>
+  <text x="96" y="163" font-family="Arial,sans-serif" font-size="16" font-weight="600"
+    fill="#ffffff" text-anchor="middle" dominant-baseline="middle">ONBOARDING</text>
+</svg>

@@ -89,4 +89,18 @@ function getById(onboardingId) {
   return readAll().find((r) => r.onboarding_id === onboardingId);
 }
 
-module.exports = { insert, updatePdfPath, getAll, getById };
+/**
+ * Update the status for an existing record.
+ * @param {string} onboardingId
+ * @param {string} status  'Pending' | 'Reviewed' | 'Approved' | 'Flagged'
+ */
+function updateStatus(onboardingId, status) {
+  return queueWrite(() => {
+    const rows = readAll();
+    const row  = rows.find((r) => r.onboarding_id === onboardingId);
+    if (row) row.status = status;
+    fs.writeFileSync(DB_FILE, JSON.stringify(rows, null, 2), 'utf8');
+  });
+}
+
+module.exports = { insert, updatePdfPath, getAll, getById, updateStatus };

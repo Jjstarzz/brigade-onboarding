@@ -268,6 +268,9 @@ async function handleSubmit(e) {
   const ticker = setInterval(() => { spinMsg.textContent = messages[++idx % messages.length]; }, 3500);
 
   try {
+    if (!navigator.onLine)
+      throw new Error('You appear to be offline. Please check your connection and try again.');
+
     const formData = new FormData(formEl);
     formData.set('vehicle_registration',
       (formData.get('vehicle_registration') || '').toUpperCase().replace(/\s/g, ''));

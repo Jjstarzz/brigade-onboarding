@@ -120,6 +120,7 @@ router.post('/', (req, res, next) => {
         // ── 4b. Save record ──────────────────────────────────────────────
         await db.insert({
           onboarding_id:        onboardingId,
+          status:               'Pending',
           product_type:         d.product_type,
           sim_number:           d.sim_number,
           device_id:            d.device_id,
