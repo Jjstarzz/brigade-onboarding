@@ -54,6 +54,35 @@ body {
   flex-shrink: 0;
 }
 
+.resources-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+.resources-hint a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.resources-hint a:hover { text-decoration: underline; }
+
+.header-resources-link {
+  margin-left: auto;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  opacity: .85;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 4px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.header-resources-link:hover { opacity: 1; background: rgba(255,255,255,.12); }
+
 /* ── Layout ────────────────────────────────────────────────────────────────── */
 main {
   max-width: 700px;

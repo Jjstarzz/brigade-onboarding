@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Brigade Electronics installer resources and user manuals">
+  <meta name="theme-color" content="#003087">
+  <title>Resources — Brigade Electronics</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .resources-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .resource-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--text);
+      background: var(--card);
+      transition: box-shadow var(--transition), border-color var(--transition);
+    }
+
+    .resource-item:hover {
+      box-shadow: var(--shadow);
+      border-color: var(--accent);
+    }
+
+    .resource-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--brand-light);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--brand-blue);
+      font-size: 1.3rem;
+    }
+
+    .resource-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .resource-meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .resource-arrow {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--accent);
+      text-decoration: none;
+      margin-bottom: 20px;
+    }
+
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header" role="banner">
+    <div class="header-logo" aria-hidden="true">BE</div>
+    <div>
+      <h1>Brigade Electronics</h1>
+      <p>Installer Resources</p>
+    </div>
+  </header>
+
+  <main>
+    <a href="/" class="back-link">&#8592; Back to onboarding form</a>
+
+    <div class="card">
+      <h2>User Manuals &amp; Guides</h2>
+      <div class="resources-grid">
+
+        <a class="resource-item" href="https://drive.google.com/file/d/1_1j8hQ0q0bnQb-YdcLuPn2tMSwqP4jYF/view?usp=drive_link" target="_blank" rel="noopener noreferrer">
+          <div class="resource-icon">&#128196;</div>
+          <div>
+            <div class="resource-title">MDR 500 User Manual</div>
+            <div class="resource-meta">Mobile Digital Recorder — 500 Series</div>
+          </div>
+          <span class="resource-arrow">&#8599;</span>
+        </a>
+
+        <a class="resource-item" href="https://brigade-electronics-product-support.s3.amazonaws.com/Mobile%20Digital%20Recorders/MDR-6XX%20Series/MDR-644/MDR-644-1-CMR%20(6570)/User%20Manual/MDR-64XXX-X-XXX(XX)%20(Various)%20Short%20Installation%20%26%20Operation%20Guide%20-%20V6.0%20-%20ENG%20(7046B).pdf" target="_blank" rel="noopener noreferrer">
+          <div class="resource-icon">&#128196;</div>
+          <div>
+            <div class="resource-title">MDR 600 Installation &amp; Operation Guide</div>
+            <div class="resource-meta">Mobile Digital Recorder — 600 Series</div>
+          </div>
+          <span class="resource-arrow">&#8599;</span>
+        </a>
+
+        <a class="resource-item" href="https://drive.google.com/file/d/1fM26kSWKUngzL8H4rQQmjrAs68gkNAr3/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+          <div class="resource-icon">&#128203;</div>
+          <div>
+            <div class="resource-title">SIM &amp; Server Connection Checksheet</div>
+            <div class="resource-meta">Connectivity verification checklist</div>
+          </div>
+          <span class="resource-arrow">&#8599;</span>
+        </a>
+
+        <a class="resource-item" href="https://drive.google.com/file/d/14o-jehf61Qmrj1u-5zXPMi_361ELp6O0/view?usp=drive_link" target="_blank" rel="noopener noreferrer">
+          <div class="resource-icon">&#128203;</div>
+          <div>
+            <div class="resource-title">SIM Installation &amp; Configuration Guide</div>
+            <div class="resource-meta">500 Series — SIM setup and configuration</div>
+          </div>
+          <span class="resource-arrow">&#8599;</span>
+        </a>
+
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>
