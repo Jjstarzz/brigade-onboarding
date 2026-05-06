@@ -20,9 +20,10 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const { request } = e;
 
-  // Only handle GET requests to our own origin
+  // Only handle GET requests to our own origin — never proxy external URLs
   if (request.method !== 'GET') return;
-  if (!request.url.startsWith(self.location.origin)) return;
+  const requestUrl = new URL(request.url);
+  if (requestUrl.origin !== self.location.origin) return;
 
   // Never cache admin or API routes — always go to the network
   const url = new URL(request.url);

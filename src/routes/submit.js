@@ -35,8 +35,9 @@ const UPLOADS_ROOT = process.env.UPLOADS_DIR
 
 fs.mkdirSync(UPLOADS_ROOT, { recursive: true });
 
-// ── Allowed MIME types ────────────────────────────────────────────────────────
+// ── Allowed MIME types and their safe extensions ──────────────────────────────
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/heic', 'image/heif']);
+const MIME_TO_EXT  = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/heic': '.heic', 'image/heif': '.heic' };
 
 // ── Multer — each request gets its own folder keyed to a random ID ────────────
 function makeUpload(folderPath) {
@@ -46,7 +47,7 @@ function makeUpload(folderPath) {
       cb(null, folderPath);
     },
     filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+      const ext = MIME_TO_EXT[file.mimetype.toLowerCase()] || '.jpg';
       cb(null, `${file.fieldname}${ext}`);
     },
   });

@@ -3,6 +3,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const helmet  = require('helmet');
 const path    = require('path');
 const crypto  = require('crypto');
 
@@ -21,13 +22,23 @@ const app = express();
 
 // ── Security headers ──────────────────────────────────────────────────────────
 app.disable('x-powered-by');
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  next();
-});
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:  ["'self'"],
+      scriptSrc:   ["'self'", "'unsafe-inline'"],
+      styleSrc:    ["'self'", "'unsafe-inline'"],
+      imgSrc:      ["'self'", "data:", "blob:"],
+      connectSrc:  ["'self'"],
+      fontSrc:     ["'self'"],
+      objectSrc:   ["'none'"],
+      frameSrc:    ["'none'"],
+    },
+  },
+  frameguard:              { action: 'deny' },
+  hsts:                    { maxAge: 31536000, includeSubDomains: true },
+  referrerPolicy:          { policy: 'strict-origin-when-cross-origin' },
+}));
 
 // ── Correlation ID (for log tracing) ─────────────────────────────────────────
 app.use((req, res, next) => {

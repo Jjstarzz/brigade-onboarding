@@ -19,7 +19,9 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY . .
 
 # Ensure storage folders exist (volumes mounted here will override at runtime)
-RUN mkdir -p uploads data logs
+RUN mkdir -p uploads data logs && chown -R node:node /app
+
+USER node
 
 EXPOSE 3000
 
