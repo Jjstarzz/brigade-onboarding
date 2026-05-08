@@ -72,9 +72,10 @@ function makeUpload(folderPath) {
 
 // ── Generate human-readable onboarding ID ────────────────────────────────────
 function generateOnboardingId(reg) {
-  const date  = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const token = crypto.randomBytes(3).toString('hex').toUpperCase();
-  return `BRG-${date}-${reg}-${token}`;
+  const safeReg = reg.replace(/[^A-Z0-9-]/g, '').slice(0, 15);
+  const date    = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const token   = crypto.randomBytes(3).toString('hex').toUpperCase();
+  return `BRG-${date}-${safeReg}-${token}`;
 }
 
 // ── Route ─────────────────────────────────────────────────────────────────────
