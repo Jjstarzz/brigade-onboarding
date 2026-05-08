@@ -298,6 +298,47 @@ async function handleSubmit(e) {
   }
 }
 
+// ── PWA Install prompt ─────────────────────────────────────────────────────────
+(function () {
+  const banner  = document.getElementById('install-banner');
+  const btn     = document.getElementById('install-btn');
+  const dismiss = document.getElementById('install-dismiss');
+  const sub     = document.getElementById('install-banner-sub');
+
+  // Don't show if already running as installed PWA
+  if (window.matchMedia('(display-mode: standalone)').matches) return;
+
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+  if (isIos) {
+    // iOS doesn't fire beforeinstallprompt — show a manual hint instead
+    sub.textContent = 'Tap the Share button \u{1F4E4} then "Add to Home Screen".';
+    btn.style.display = 'none';
+    banner.classList.add('visible');
+  } else {
+    // Android / Chrome — wait for the native prompt
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      banner.classList.add('visible');
+    });
+
+    btn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') banner.classList.remove('visible');
+      deferredPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => banner.classList.remove('visible'));
+  }
+
+  dismiss.addEventListener('click', () => banner.classList.remove('visible'));
+}());
+
 // ── Reset ──────────────────────────────────────────────────────────────────────
 function resetForm() {
   const formEl = document.getElementById('onboarding-form');

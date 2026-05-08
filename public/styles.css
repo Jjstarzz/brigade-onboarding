@@ -54,6 +54,52 @@ body {
   flex-shrink: 0;
 }
 
+/* ── Install banner ────────────────────────────────────────────────────────── */
+.install-banner {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: var(--brand-light);
+  border: 1px solid #c0d4f5;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.install-banner.visible { display: flex; }
+
+.install-banner-icon { font-size: 1.5rem; flex-shrink: 0; }
+
+.install-banner-text {
+  flex: 1;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.install-banner-text strong { display: block; color: var(--brand-blue); }
+.install-banner-text span   { color: var(--muted); font-size: 0.8rem; }
+
+.install-banner-btn {
+  padding: 7px 16px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.install-banner-dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 4px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.install-banner-dismiss:hover { color: var(--text); }
+
 .resources-hint {
   font-size: 0.82rem;
   color: var(--muted);
