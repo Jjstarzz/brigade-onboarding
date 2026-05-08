@@ -38,6 +38,7 @@ fs.mkdirSync(UPLOADS_ROOT, { recursive: true });
 // ── Allowed MIME types and their safe extensions ──────────────────────────────
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/heic', 'image/heif']);
 const MIME_TO_EXT  = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/heic': '.heic', 'image/heif': '.heic' };
+const SAFE_FIELDS  = new Set(['system_photo', 'network_photo', 'server_photo', 'registration_photo', 'vin_photo']);
 
 // ── Multer — each request gets its own folder keyed to a random ID ────────────
 function makeUpload(folderPath) {
@@ -47,8 +48,9 @@ function makeUpload(folderPath) {
       cb(null, folderPath);
     },
     filename: (req, file, cb) => {
-      const ext = MIME_TO_EXT[file.mimetype.toLowerCase()] || '.jpg';
-      cb(null, `${file.fieldname}${ext}`);
+      const safeName = SAFE_FIELDS.has(file.fieldname) ? file.fieldname : 'upload';
+      const ext      = MIME_TO_EXT[file.mimetype.toLowerCase()] || '.jpg';
+      cb(null, `${safeName}${ext}`);
     },
   });
 

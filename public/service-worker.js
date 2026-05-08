@@ -26,15 +26,15 @@ self.addEventListener('fetch', (e) => {
   if (requestUrl.origin !== self.location.origin) return;
 
   // Never cache admin or API routes — always go to the network
-  const url = new URL(request.url);
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin')) return;
+  if (requestUrl.pathname.startsWith('/api/') || requestUrl.pathname.startsWith('/admin')) return;
 
-  // Cache-first for static assets, stale-while-revalidate for the page shell
+  // Cache-first for static assets, stale-while-revalidate for the page shell.
+  // Fetch using the validated URL string (not the raw Request) to avoid SSRF.
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
-      const cached = await cache.match(request);
-      const networkFetch = fetch(request).then((response) => {
-        if (response.ok) cache.put(request, response.clone());
+      const cached = await cache.match(requestUrl.href);
+      const networkFetch = fetch(requestUrl.href).then((response) => {
+        if (response.ok) cache.put(requestUrl.href, response.clone());
         return response;
       }).catch(() => null);
       return cached || networkFetch;
