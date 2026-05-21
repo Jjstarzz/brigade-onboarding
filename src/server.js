@@ -30,7 +30,7 @@ app.use(helmet({
       scriptSrcElem: ["'self'", "'unsafe-inline'", "https://static.zdassets.com", "https://ekr.zdassets.com", "https://*.zendesk.com"],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc:      ["'self'", "'unsafe-inline'", "https://*.zdassets.com"],
-      imgSrc:        ["'self'", "data:", "blob:", "https://*.zendesk.com", "https://*.zdassets.com"],
+      imgSrc:        ["'self'", "data:", "blob:", "https://*.zendesk.com", "https://*.zdassets.com", "https://www.gravatar.com"],
       connectSrc:    ["'self'", "https://*.zendesk.com", "https://*.zdassets.com", "wss://*.zendesk.com"],
       fontSrc:       ["'self'", "https://*.zdassets.com"],
       objectSrc:     ["'none'"],
