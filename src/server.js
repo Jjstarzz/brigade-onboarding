@@ -27,6 +27,7 @@ app.use(helmet({
     directives: {
       defaultSrc:  ["'self'"],
       scriptSrc:     ["'self'", "'unsafe-inline'", "https://static.zdassets.com", "https://ekr.zdassets.com"],
+      scriptSrcElem: ["'self'", "'unsafe-inline'", "https://static.zdassets.com", "https://ekr.zdassets.com"],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc:      ["'self'", "'unsafe-inline'", "https://*.zdassets.com"],
       imgSrc:        ["'self'", "data:", "blob:", "https://*.zendesk.com", "https://*.zdassets.com"],
