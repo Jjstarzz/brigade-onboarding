@@ -2,7 +2,7 @@
 # Multi-stage build: keeps the final image small and clean.
 
 # ── Stage 1: install dependencies (needs build tools for better-sqlite3) ───────
-FROM mcr.microsoft.com/mirror/docker/library/node:20-alpine AS builder
+FROM brigadeonboarding.azurecr.io/node:20-alpine AS builder
 
 RUN apk add --no-cache python3 make g++
 
@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 # ── Stage 2: runtime image ─────────────────────────────────────────────────────
-FROM mcr.microsoft.com/mirror/docker/library/node:20-alpine AS runtime
+FROM brigadeonboarding.azurecr.io/node:20-alpine AS runtime
 
 WORKDIR /app
 
