@@ -120,15 +120,18 @@
         <!-- Device ID -->
         <div class="form-group">
           <label for="device_id">Device ID <span class="required">*</span></label>
-          <input
-            type="text"
-            id="device_id"
-            name="device_id"
-            maxlength="50"
-            autocomplete="off"
-            placeholder="e.g. MDR-00123456"
-            required
-          >
+          <div class="scan-input-group">
+            <input
+              type="text"
+              id="device_id"
+              name="device_id"
+              maxlength="50"
+              autocomplete="off"
+              placeholder="e.g. MDR-00123456"
+              required
+            >
+            <button type="button" class="scan-btn" onclick="openScanner('device_id','Device ID')" title="Scan barcode">&#x1F4F7;</button>
+          </div>
           <span class="field-error" id="err-device_id"></span>
         </div>
 
@@ -238,16 +241,19 @@
             Vehicle Registration <span class="required">*</span>
             <span class="hint">(no spaces, max 15 characters)</span>
           </label>
-          <input
-            type="text"
-            id="vehicle_registration"
-            name="vehicle_registration"
-            maxlength="15"
-            autocomplete="off"
-            placeholder="e.g. BD51SMR or AB-123-CD"
-            style="text-transform:uppercase"
-            required
-          >
+          <div class="scan-input-group">
+            <input
+              type="text"
+              id="vehicle_registration"
+              name="vehicle_registration"
+              maxlength="15"
+              autocomplete="off"
+              placeholder="e.g. BD51SMR or AB-123-CD"
+              style="text-transform:uppercase"
+              required
+            >
+            <button type="button" class="scan-btn" onclick="openScanner('vehicle_registration','Vehicle Registration')" title="Scan barcode">&#x1F4F7;</button>
+          </div>
           <span class="field-error" id="err-vehicle_registration"></span>
         </div>
 
@@ -257,16 +263,19 @@
             VIN <span class="required">*</span>
             <span class="hint">(exactly 17 chars, no I/O/Q)</span>
           </label>
-          <input
-            type="text"
-            id="vin"
-            name="vin"
-            maxlength="17"
-            autocomplete="off"
-            placeholder="e.g. WBA3A5G5XDNS09522"
-            style="text-transform:uppercase"
-            required
-          >
+          <div class="scan-input-group">
+            <input
+              type="text"
+              id="vin"
+              name="vin"
+              maxlength="17"
+              autocomplete="off"
+              placeholder="e.g. WBA3A5G5XDNS09522"
+              style="text-transform:uppercase"
+              required
+            >
+            <button type="button" class="scan-btn" onclick="openScanner('vin','VIN')" title="Scan barcode">&#x1F4F7;</button>
+          </div>
           <span class="field-error" id="err-vin"></span>
         </div>
 
@@ -445,7 +454,22 @@
 
   </main>
 
+  <!-- ── Barcode Scanner Modal ──────────────────────────────────────────────── -->
+  <div id="scanner-modal" class="scanner-modal" role="dialog" aria-modal="true" aria-label="Barcode scanner">
+    <div class="scanner-header">
+      <span id="scanner-label">Scanning</span>
+      <button type="button" class="scanner-close-btn" onclick="closeScanner()" aria-label="Close scanner">&#10005;</button>
+    </div>
+    <div class="scanner-viewport">
+      <video id="scanner-video" autoplay muted playsinline></video>
+      <div class="scanner-reticle"></div>
+    </div>
+    <p id="scanner-status" class="scanner-status">Starting camera…</p>
+    <button type="button" id="scanner-photo-btn" onclick="scannerPhoto()" class="btn btn-primary scanner-photo-btn" style="display:none">&#128247; Take Photo Instead</button>
+  </div>
+
   <script src="app.js"></script>
+  <script src="scanner.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js');

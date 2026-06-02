@@ -26,8 +26,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc:  ["'self'"],
-      scriptSrc:     ["'self'", "'unsafe-inline'", "https://static.zdassets.com", "https://ekr.zdassets.com", "https://*.zendesk.com"],
-      scriptSrcElem: ["'self'", "'unsafe-inline'", "https://static.zdassets.com", "https://ekr.zdassets.com", "https://*.zendesk.com"],
+      scriptSrc:     ["'self'", "'unsafe-inline'", "https://static.zdassets.com", "https://ekr.zdassets.com", "https://*.zendesk.com", "https://cdn.jsdelivr.net"],
+      scriptSrcElem: ["'self'", "'unsafe-inline'", "https://static.zdassets.com", "https://ekr.zdassets.com", "https://*.zendesk.com", "https://cdn.jsdelivr.net"],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc:      ["'self'", "'unsafe-inline'", "https://*.zdassets.com"],
       imgSrc:        ["'self'", "data:", "blob:", "https://*.zendesk.com", "https://*.zdassets.com", "https://www.gravatar.com"],
