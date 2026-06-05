@@ -9,12 +9,7 @@
     document.getElementById('scanner-label').textContent = 'Scan ' + label;
     setStatus('Starting camera…');
     setModal(true);
-
-    if ('BarcodeDetector' in window) {
-      await startNative();
-    } else {
-      await startZXing();
-    }
+    await startZXing();
   };
 
   // Photo fallback triggered by the "Take Photo" button in the scanner modal
@@ -144,16 +139,22 @@
       const vid = document.getElementById('scanner-video');
       zxingReader = new window.ZXing.BrowserMultiFormatReader();
 
+      // Select rear camera — prefer main camera over ultra-wide
       const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
-      const rear = devices.find(d => /back|rear|environment/i.test(d.label));
-      const deviceId = (rear || devices[0] || {}).deviceId || null;
+      const rear = devices.find(d => /back|rear/i.test(d.label) && !/ultra|wide|macro/i.test(d.label))
+                || devices.find(d => /back|rear/i.test(d.label))
+                || devices[devices.length - 1]
+                || null;
+      const deviceId = rear ? rear.deviceId : null;
 
       setStatus('Point camera at barcode');
       await zxingReader.decodeFromVideoDevice(deviceId, vid, (result) => {
         if (result) onDetected(result.getText());
       });
+
+      document.getElementById('scanner-photo-btn').style.display = 'inline-block';
     } catch (_) {
-      setStatus('Live scan unavailable — use photo mode');
+      setStatus('Live scan unavailable — use photo mode below');
       document.getElementById('scanner-photo-btn').style.display = 'inline-block';
     }
   }
