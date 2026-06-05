@@ -103,17 +103,20 @@
             SIM Number <span class="required">*</span>
             <span class="hint">(exactly 19 digits)</span>
           </label>
-          <input
-            type="text"
-            id="sim_number"
-            name="sim_number"
-            inputmode="numeric"
-            maxlength="19"
-            pattern="\d{19}"
-            autocomplete="off"
-            placeholder="8944XXXXXXXXXXXXXXX"
-            required
-          >
+          <div class="scan-input-group">
+            <input
+              type="text"
+              id="sim_number"
+              name="sim_number"
+              inputmode="numeric"
+              maxlength="19"
+              pattern="\d{19}"
+              autocomplete="off"
+              placeholder="8944XXXXXXXXXXXXXXX"
+              required
+            >
+            <button type="button" class="scan-btn" onclick="openScanner('sim_number','SIM Number')" title="Scan barcode">&#x1F4F7;</button>
+          </div>
           <span class="field-error" id="err-sim_number"></span>
         </div>
 
