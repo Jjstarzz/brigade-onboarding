@@ -40,20 +40,31 @@
       img.src = url;
       img.onload = async () => {
         try {
+          // Resize to max 1920px — large camera images confuse BarcodeDetector
+          const canvas = document.createElement('canvas');
+          const max = 1920;
+          const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+          canvas.width  = Math.round(img.naturalWidth  * scale);
+          canvas.height = Math.round(img.naturalHeight * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
           if ('BarcodeDetector' in window) {
             const detector = new BarcodeDetector({
               formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'code_93', 'itf']
             });
-            const hits = await detector.detect(img);
+            // Try resized canvas first, then original image
+            let hits = await detector.detect(canvas);
+            if (!hits.length) hits = await detector.detect(img);
             if (hits.length) { onDetected(hits[0].rawValue); return; }
           }
-          // BarcodeDetector missed it — try ZXing
+
+          // ZXing fallback
           await loadZXing();
           const r = new window.ZXing.BrowserMultiFormatReader();
           const result = await r.decodeFromImageElement(img);
           onDetected(result.getText());
         } catch (_) {
-          alert('No barcode found. Please retake the photo closer to the barcode.');
+          alert('No barcode detected. Make sure the barcode is well-lit, fills most of the frame, and is not at an angle.');
         } finally {
           URL.revokeObjectURL(url);
         }
