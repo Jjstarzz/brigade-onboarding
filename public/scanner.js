@@ -91,33 +91,45 @@
         } catch (_) {}
       });
 
-      setStatus('Point camera at barcode — tap screen to focus');
+      setStatus('Hold barcode steady in the box…');
 
       const detector = new BarcodeDetector({
         formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'code_93', 'itf']
       });
 
-      // Canvas-based frame detection (more reliable than passing video element directly)
+      // Use takePhoto() which triggers real autofocus — far sharper than video frames
+      const imageCapture = ('ImageCapture' in window) ? new ImageCapture(track) : null;
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
       async function tick() {
-        if (!nativeStream || !vid.videoWidth) {
-          animFrame = requestAnimationFrame(tick);
-          return;
-        }
-        canvas.width  = vid.videoWidth;
-        canvas.height = vid.videoHeight;
-        ctx.drawImage(vid, 0, 0);
+        if (!nativeStream) return;
         try {
-          const hits = await detector.detect(canvas);
-          if (hits.length) { onDetected(hits[0].rawValue); return; }
+          let source;
+          if (imageCapture) {
+            try {
+              const blob = await imageCapture.takePhoto();
+              source = await createImageBitmap(blob);
+            } catch (_) {
+              try { source = await imageCapture.grabFrame(); } catch (_2) {}
+            }
+          }
+          if (!source && vid.videoWidth) {
+            canvas.width = vid.videoWidth;
+            canvas.height = vid.videoHeight;
+            ctx.drawImage(vid, 0, 0);
+            source = canvas;
+          }
+          if (source) {
+            const hits = await detector.detect(source);
+            if (source.close) source.close();
+            if (hits.length) { onDetected(hits[0].rawValue); return; }
+          }
         } catch (_) {}
-        animFrame = setTimeout(() => { animFrame = requestAnimationFrame(tick); }, 200);
+        animFrame = setTimeout(() => { animFrame = requestAnimationFrame(tick); }, 800);
       }
       tick();
 
-      // Always show the photo fallback button so user can switch if needed
       document.getElementById('scanner-photo-btn').style.display = 'inline-block';
     } catch (_) {
       window.closeScanner();
