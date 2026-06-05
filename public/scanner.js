@@ -4,17 +4,8 @@
   let animFrame = null;
   let zxingReader = null;
 
-  const isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-
   window.openScanner = async function (fieldId, label) {
     targetField = fieldId;
-
-    if (isMobile) {
-      // On mobile use the native camera — handles autofocus perfectly
-      mobilePhotoCapture();
-      return;
-    }
-
     document.getElementById('scanner-label').textContent = 'Scan ' + label;
     setStatus('Starting camera…');
     setModal(true);
@@ -26,7 +17,8 @@
     }
   };
 
-  function mobilePhotoCapture() {
+  // Photo fallback triggered by the "Take Photo" button in the scanner modal
+  window.scannerTakePhoto = function () {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -34,13 +26,11 @@
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       const img = new Image();
       const url = URL.createObjectURL(file);
       img.src = url;
       img.onload = async () => {
         try {
-          // Resize to max 1920px — large camera images confuse BarcodeDetector
           const canvas = document.createElement('canvas');
           const max = 1920;
           const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
@@ -52,77 +42,83 @@
             const detector = new BarcodeDetector({
               formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'code_93', 'itf']
             });
-            // Try resized canvas first, then original image
             let hits = await detector.detect(canvas);
             if (!hits.length) hits = await detector.detect(img);
             if (hits.length) { onDetected(hits[0].rawValue); return; }
           }
-
-          // ZXing fallback
           await loadZXing();
           const r = new window.ZXing.BrowserMultiFormatReader();
           const result = await r.decodeFromImageElement(img);
           onDetected(result.getText());
         } catch (_) {
-          alert('No barcode detected. Make sure the barcode is well-lit, fills most of the frame, and is not at an angle.');
+          alert('No barcode detected. Make sure the barcode fills the frame and is well-lit.');
         } finally {
           URL.revokeObjectURL(url);
         }
       };
     };
     input.click();
-  }
+  };
 
   async function startNative() {
     try {
-      nativeStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
+      // Enumerate cameras and prefer the main rear camera (avoids fixed-focus ultra-wide)
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter(d => d.kind === 'videoinput');
+      const mainCam = cams.find(d => /back|rear/i.test(d.label) && !/ultra|wide|macro/i.test(d.label))
+                   || cams.find(d => /back|rear/i.test(d.label))
+                   || null;
+
+      const constraints = mainCam
+        ? { video: { deviceId: { exact: mainCam.deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } }
+        : { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } };
+
+      nativeStream = await navigator.mediaDevices.getUserMedia(constraints);
       const vid = document.getElementById('scanner-video');
       vid.srcObject = nativeStream;
       await vid.play();
 
       const track = nativeStream.getVideoTracks()[0];
-
-      // Enable continuous autofocus and 2x zoom (helps Samsung focus on close barcodes)
       if (track.applyConstraints) {
         try { await track.applyConstraints({ focusMode: 'continuous' }); } catch (_) {}
-        try { await track.applyConstraints({ zoom: 2 }); } catch (_) {}
       }
 
-      // Tap anywhere on video to trigger single-shot re-focus
+      // Tap to re-focus
       vid.addEventListener('click', async () => {
         try {
           await track.applyConstraints({ focusMode: 'single-shot' });
-          setTimeout(() => track.applyConstraints({ focusMode: 'continuous' }).catch(() => {}), 800);
+          setTimeout(() => track.applyConstraints({ focusMode: 'continuous' }).catch(() => {}), 600);
         } catch (_) {}
       });
 
-      setStatus('Focusing… (tap screen to focus)');
-      await new Promise(r => setTimeout(r, 1500));
-      setStatus('Point camera at barcode — tap to focus');
+      setStatus('Point camera at barcode — tap screen to focus');
 
       const detector = new BarcodeDetector({
         formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'code_93', 'itf']
       });
 
-      // Use ImageCapture.grabFrame() for sharp individual frames if available
-      const imageCapture = ('ImageCapture' in window) ? new ImageCapture(track) : null;
+      // Canvas-based frame detection (more reliable than passing video element directly)
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
 
       async function tick() {
-        if (!nativeStream) return;
+        if (!nativeStream || !vid.videoWidth) {
+          animFrame = requestAnimationFrame(tick);
+          return;
+        }
+        canvas.width  = vid.videoWidth;
+        canvas.height = vid.videoHeight;
+        ctx.drawImage(vid, 0, 0);
         try {
-          let src = vid;
-          if (imageCapture) {
-            try { src = await imageCapture.grabFrame(); } catch (_) { src = vid; }
-          }
-          const hits = await detector.detect(src);
-          if (src !== vid && src.close) src.close();
+          const hits = await detector.detect(canvas);
           if (hits.length) { onDetected(hits[0].rawValue); return; }
         } catch (_) {}
-        animFrame = setTimeout(() => { animFrame = requestAnimationFrame(tick); }, 150);
+        animFrame = setTimeout(() => { animFrame = requestAnimationFrame(tick); }, 200);
       }
       tick();
+
+      // Always show the photo fallback button so user can switch if needed
+      document.getElementById('scanner-photo-btn').style.display = 'inline-block';
     } catch (_) {
       window.closeScanner();
       alert('Camera permission is required. Please allow access and try again.');
