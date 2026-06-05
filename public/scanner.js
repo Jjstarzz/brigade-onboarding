@@ -137,22 +137,26 @@
       setStatus('Loading scanner…');
       await loadZXing();
 
+      // Step 1: trigger permission so camera labels become readable
+      const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      tempStream.getTracks().forEach(t => t.stop());
+
+      // Step 2: enumerate with labels now available — find main rear camera
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter(d => d.kind === 'videoinput');
+      // Samsung labels: "Back camera" (main), "Back Ultra wide camera", "Back Telephoto camera"
+      const mainCam = cams.find(d => /^back camera$/i.test(d.label))
+                   || cams.find(d => /back|rear/i.test(d.label) && !/ultra|wide|macro|tele/i.test(d.label))
+                   || cams.find(d => /back|rear/i.test(d.label))
+                   || null;
+      const deviceId = mainCam ? mainCam.deviceId : undefined;
+
       const hints = new Map();
       hints.set(window.ZXing.DecodeHintType.TRY_HARDER, true);
       zxingReader = new window.ZXing.BrowserMultiFormatReader(hints);
 
-      // Get available cameras and prefer main rear camera
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const cams = devices.filter(d => d.kind === 'videoinput');
-      const rear = cams.find(d => /back|rear/i.test(d.label) && !/ultra|wide|macro/i.test(d.label))
-                || cams.find(d => /back|rear/i.test(d.label))
-                || cams[cams.length - 1]
-                || null;
-      const deviceId = rear ? rear.deviceId : undefined;
-
       setStatus('Point camera at barcode');
-      // Pass video element ID as string — required by ZXing
-      await zxingReader.decodeFromVideoDevice(deviceId, 'scanner-video', (result, err) => {
+      await zxingReader.decodeFromVideoDevice(deviceId, 'scanner-video', (result) => {
         if (result) onDetected(result.getText());
       });
 
