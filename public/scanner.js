@@ -20,11 +20,27 @@
   async function startNative() {
     try {
       nativeStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+        video: {
+          facingMode: 'environment',
+          width:  { ideal: 1920 },
+          height: { ideal: 1080 },
+          focusMode: 'continuous',
+          advanced: [{ focusMode: 'continuous' }],
+        }
       });
       const vid = document.getElementById('scanner-video');
       vid.srcObject = nativeStream;
       await vid.play();
+
+      // Apply continuous autofocus on the track if supported
+      const track = nativeStream.getVideoTracks()[0];
+      if (track && track.applyConstraints) {
+        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+      }
+
+      // Wait for camera to stabilise before scanning
+      setStatus('Focusing…');
+      await new Promise(r => setTimeout(r, 1200));
       setStatus('Point camera at barcode');
 
       const detector = new BarcodeDetector({
