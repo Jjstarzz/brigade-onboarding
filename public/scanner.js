@@ -136,24 +136,29 @@
     try {
       setStatus('Loading scanner…');
       await loadZXing();
-      const vid = document.getElementById('scanner-video');
-      zxingReader = new window.ZXing.BrowserMultiFormatReader();
 
-      // Select rear camera — prefer main camera over ultra-wide
-      const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
-      const rear = devices.find(d => /back|rear/i.test(d.label) && !/ultra|wide|macro/i.test(d.label))
-                || devices.find(d => /back|rear/i.test(d.label))
-                || devices[devices.length - 1]
+      const hints = new Map();
+      hints.set(window.ZXing.DecodeHintType.TRY_HARDER, true);
+      zxingReader = new window.ZXing.BrowserMultiFormatReader(hints);
+
+      // Get available cameras and prefer main rear camera
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter(d => d.kind === 'videoinput');
+      const rear = cams.find(d => /back|rear/i.test(d.label) && !/ultra|wide|macro/i.test(d.label))
+                || cams.find(d => /back|rear/i.test(d.label))
+                || cams[cams.length - 1]
                 || null;
-      const deviceId = rear ? rear.deviceId : null;
+      const deviceId = rear ? rear.deviceId : undefined;
 
       setStatus('Point camera at barcode');
-      await zxingReader.decodeFromVideoDevice(deviceId, vid, (result) => {
+      // Pass video element ID as string — required by ZXing
+      await zxingReader.decodeFromVideoDevice(deviceId, 'scanner-video', (result, err) => {
         if (result) onDetected(result.getText());
       });
 
       document.getElementById('scanner-photo-btn').style.display = 'inline-block';
-    } catch (_) {
+    } catch (err) {
+      console.error('Scanner error:', err);
       setStatus('Live scan unavailable — use photo mode below');
       document.getElementById('scanner-photo-btn').style.display = 'inline-block';
     }
