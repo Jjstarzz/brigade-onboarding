@@ -4,8 +4,17 @@
   let animFrame = null;
   let zxingReader = null;
 
+  const isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+
   window.openScanner = async function (fieldId, label) {
     targetField = fieldId;
+
+    if (isMobile) {
+      // On mobile use the native camera — handles autofocus perfectly
+      mobilePhotoCapture();
+      return;
+    }
+
     document.getElementById('scanner-label').textContent = 'Scan ' + label;
     setStatus('Starting camera…');
     setModal(true);
@@ -16,6 +25,42 @@
       await startZXing();
     }
   };
+
+  function mobilePhotoCapture() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.src = url;
+      img.onload = async () => {
+        try {
+          if ('BarcodeDetector' in window) {
+            const detector = new BarcodeDetector({
+              formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'code_93', 'itf']
+            });
+            const hits = await detector.detect(img);
+            if (hits.length) { onDetected(hits[0].rawValue); return; }
+          }
+          // BarcodeDetector missed it — try ZXing
+          await loadZXing();
+          const r = new window.ZXing.BrowserMultiFormatReader();
+          const result = await r.decodeFromImageElement(img);
+          onDetected(result.getText());
+        } catch (_) {
+          alert('No barcode found. Please retake the photo closer to the barcode.');
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      };
+    };
+    input.click();
+  }
 
   async function startNative() {
     try {
