@@ -20,46 +20,51 @@
   async function startNative() {
     try {
       nativeStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width:  { ideal: 1920 },
-          height: { ideal: 1080 },
-        }
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
       });
       const vid = document.getElementById('scanner-video');
       vid.srcObject = nativeStream;
       await vid.play();
 
-      // Apply continuous autofocus on the track
       const track = nativeStream.getVideoTracks()[0];
-      async function applyFocus(mode) {
-        if (!track || !track.applyConstraints) return;
-        try { await track.applyConstraints({ focusMode: mode }); } catch (_) {}
-      }
-      await applyFocus('continuous');
 
-      // Tap-to-focus on the video
+      // Enable continuous autofocus and 2x zoom (helps Samsung focus on close barcodes)
+      if (track.applyConstraints) {
+        try { await track.applyConstraints({ focusMode: 'continuous' }); } catch (_) {}
+        try { await track.applyConstraints({ zoom: 2 }); } catch (_) {}
+      }
+
+      // Tap anywhere on video to trigger single-shot re-focus
       vid.addEventListener('click', async () => {
-        await applyFocus('single-shot');
-        await applyFocus('continuous');
+        try {
+          await track.applyConstraints({ focusMode: 'single-shot' });
+          setTimeout(() => track.applyConstraints({ focusMode: 'continuous' }).catch(() => {}), 800);
+        } catch (_) {}
       });
 
-      // Wait for camera to stabilise
       setStatus('Focusing… (tap screen to focus)');
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, 1500));
       setStatus('Point camera at barcode — tap to focus');
 
       const detector = new BarcodeDetector({
         formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'code_93', 'itf']
       });
 
+      // Use ImageCapture.grabFrame() for sharp individual frames if available
+      const imageCapture = ('ImageCapture' in window) ? new ImageCapture(track) : null;
+
       async function tick() {
         if (!nativeStream) return;
         try {
-          const hits = await detector.detect(vid);
+          let src = vid;
+          if (imageCapture) {
+            try { src = await imageCapture.grabFrame(); } catch (_) { src = vid; }
+          }
+          const hits = await detector.detect(src);
+          if (src !== vid && src.close) src.close();
           if (hits.length) { onDetected(hits[0].rawValue); return; }
         } catch (_) {}
-        animFrame = requestAnimationFrame(tick);
+        animFrame = setTimeout(() => { animFrame = requestAnimationFrame(tick); }, 150);
       }
       tick();
     } catch (_) {
