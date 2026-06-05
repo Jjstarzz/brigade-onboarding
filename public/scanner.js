@@ -24,24 +24,30 @@
           facingMode: 'environment',
           width:  { ideal: 1920 },
           height: { ideal: 1080 },
-          focusMode: 'continuous',
-          advanced: [{ focusMode: 'continuous' }],
         }
       });
       const vid = document.getElementById('scanner-video');
       vid.srcObject = nativeStream;
       await vid.play();
 
-      // Apply continuous autofocus on the track if supported
+      // Apply continuous autofocus on the track
       const track = nativeStream.getVideoTracks()[0];
-      if (track && track.applyConstraints) {
-        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+      async function applyFocus(mode) {
+        if (!track || !track.applyConstraints) return;
+        try { await track.applyConstraints({ focusMode: mode }); } catch (_) {}
       }
+      await applyFocus('continuous');
 
-      // Wait for camera to stabilise before scanning
-      setStatus('Focusing…');
-      await new Promise(r => setTimeout(r, 1200));
-      setStatus('Point camera at barcode');
+      // Tap-to-focus on the video
+      vid.addEventListener('click', async () => {
+        await applyFocus('single-shot');
+        await applyFocus('continuous');
+      });
+
+      // Wait for camera to stabilise
+      setStatus('Focusing… (tap screen to focus)');
+      await new Promise(r => setTimeout(r, 2000));
+      setStatus('Point camera at barcode — tap to focus');
 
       const detector = new BarcodeDetector({
         formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'code_93', 'itf']
