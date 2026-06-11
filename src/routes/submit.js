@@ -38,7 +38,7 @@ fs.mkdirSync(UPLOADS_ROOT, { recursive: true });
 // ── Allowed MIME types and their safe extensions ──────────────────────────────
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/heic', 'image/heif']);
 const MIME_TO_EXT  = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/heic': '.heic', 'image/heif': '.heic' };
-const SAFE_FIELDS  = new Set(['system_photo', 'network_photo', 'server_photo', 'registration_photo', 'vin_photo']);
+const SAFE_FIELDS  = new Set(['system_photo', 'network_photo', 'server_photo', 'registration_photo', 'vin_photo', 'work_photos']);
 
 // ── Multer — each request gets its own folder keyed to a random ID ────────────
 function makeUpload(folderPath) {
@@ -50,13 +50,14 @@ function makeUpload(folderPath) {
     filename: (req, file, cb) => {
       const safeName = SAFE_FIELDS.has(file.fieldname) ? file.fieldname : 'upload';
       const ext      = MIME_TO_EXT[file.mimetype.toLowerCase()] || '.jpg';
-      cb(null, `${safeName}${ext}`);
+      const suffix   = file.fieldname === 'work_photos' ? `-${Date.now()}` : '';
+      cb(null, `${safeName}${suffix}${ext}`);
     },
   });
 
   return multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024, files: 5 },
+    limits: { fileSize: 10 * 1024 * 1024, files: 10 },
     fileFilter: (req, file, cb) => {
       if (ALLOWED_MIME.has(file.mimetype.toLowerCase())) cb(null, true);
       else cb(new Error(`${file.mimetype} is not allowed. Use JPG, PNG, or HEIC.`));
@@ -67,6 +68,7 @@ function makeUpload(folderPath) {
     { name: 'server_photo',       maxCount: 1 },
     { name: 'registration_photo', maxCount: 1 },
     { name: 'vin_photo',          maxCount: 1 },
+    { name: 'work_photos',        maxCount: 5 },
   ]);
 }
 
@@ -121,6 +123,16 @@ router.post('/', (req, res, next) => {
           }),
         ]);
 
+        // Save signature as PNG if provided
+        let signaturePath = null;
+        if (d.signature && d.signature.startsWith('data:image/')) {
+          const base64 = d.signature.replace(/^data:image\/\w+;base64,/, '');
+          signaturePath = path.join(uploadFolder, 'signature.png');
+          fs.writeFileSync(signaturePath, Buffer.from(base64, 'base64'));
+        }
+
+        const workPhotoPaths = (req.files?.work_photos || []).map((f) => f.path);
+
         // ── 4b. Save record ──────────────────────────────────────────────
         await db.insert({
           onboarding_id:        onboardingId,
@@ -148,6 +160,14 @@ router.post('/', (req, res, next) => {
           vehicle_colour:       vehicleInfo.colour,
           vehicle_fuel_type:    vehicleInfo.fuelType,
           vehicle_lookup_source: vehicleInfo.source,
+          // Job sheet fields
+          issue_reported:       d.issue_reported,
+          work_carried_out:     d.work_carried_out,
+          outcome:              d.outcome,
+          parts_used:           d.parts_used,
+          unused_kit:           d.unused_kit,
+          signature_path:       signaturePath,
+          work_photos:          workPhotoPaths,
         });
 
         // ── 5. Generate PDF ──────────────────────────────────────────────

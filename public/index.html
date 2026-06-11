@@ -25,8 +25,7 @@
       <p>Vehicle Installation Onboarding</p>
     </div>
     <div style="display:flex;gap:8px;margin-left:auto;align-items:center">
-      <a href="/job-sheet.html" style="background:#fff;color:#003087;padding:7px 14px;border-radius:6px;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap">Job Sheet</a>
-      <a href="/resources.html" class="header-resources-link" style="margin-left:0">Resources</a>
+        <a href="/resources.html" class="header-resources-link" style="margin-left:0">Resources</a>
     </div>
   </header>
 
@@ -59,6 +58,10 @@
       <div class="step-indicator" id="step-5-ind">
         <div class="step-circle">5</div>
         <span class="step-label">Installer</span>
+      </div>
+      <div class="step-indicator" id="step-6-ind">
+        <div class="step-circle">6</div>
+        <span class="step-label">Job Sheet</span>
       </div>
     </nav>
 
@@ -440,6 +443,82 @@
 
         <div class="form-nav">
           <button type="button" class="btn btn-secondary" onclick="goTo(4)">&larr; Back</button>
+          <button type="button" class="btn btn-primary" onclick="goTo(6)">Next: Job Sheet &rarr;</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           PAGE 6 — Job Sheet
+      ════════════════════════════════════════════════════════════════════ -->
+      <section class="form-page card" id="page-6" aria-labelledby="page6-heading">
+        <h2 id="page6-heading">Job Sheet</h2>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">
+          All fields on this page are optional. Fill in the details relevant to this visit.
+        </p>
+
+        <!-- Issue Reported -->
+        <div class="form-group">
+          <label for="issue_reported">Issue Reported</label>
+          <textarea id="issue_reported" name="issue_reported" rows="3" maxlength="2000"
+            placeholder="Describe the fault or task reported…"></textarea>
+        </div>
+
+        <!-- Work Carried Out -->
+        <div class="form-group">
+          <label for="work_carried_out">Work Carried Out</label>
+          <textarea id="work_carried_out" name="work_carried_out" rows="4" maxlength="2000"
+            placeholder="Detail all work completed during this visit…"></textarea>
+        </div>
+
+        <!-- Outcome -->
+        <div class="form-group">
+          <label for="outcome">Outcome</label>
+          <textarea id="outcome" name="outcome" rows="2" maxlength="1000"
+            placeholder="e.g. Job complete, awaiting parts, follow-up required…"></textarea>
+        </div>
+
+        <!-- Parts Used -->
+        <div class="form-group">
+          <label>Parts Used</label>
+          <div id="parts-header-main" class="parts-header" style="display:none">
+            <span>Part / Description</span><span>Quantity</span><span></span>
+          </div>
+          <div id="parts-list-main"></div>
+          <button type="button" id="add-part-btn-main" class="btn-add-part">+ Add Part</button>
+          <input type="hidden" id="parts_used" name="parts_used" value="[]">
+        </div>
+
+        <!-- Unused Kit -->
+        <div class="form-group">
+          <label for="unused_kit">Any Unused Kit</label>
+          <textarea id="unused_kit" name="unused_kit" rows="2" maxlength="500"
+            placeholder="List any parts or kit returned unused, or leave blank…"></textarea>
+        </div>
+
+        <!-- Work Photos -->
+        <div class="form-group">
+          <label>Photos of Work <span class="hint">(up to 5)</span></label>
+          <label class="work-photo-upload-btn" for="work-photos-input">
+            &#x1F4F7; Add Photos
+          </label>
+          <input type="file" id="work-photos-input" name="work_photos" accept="image/jpeg,image/png,image/heic,.heic" multiple style="display:none">
+          <div id="work-photo-previews" class="work-photo-grid"></div>
+          <p id="work-photo-count" style="font-size:.8rem;color:var(--muted);margin-top:4px"></p>
+        </div>
+
+        <!-- Signature -->
+        <div class="form-group">
+          <label>Engineer Signature</label>
+          <div class="sig-wrapper" id="sig-wrapper-main">
+            <canvas id="sig-canvas-main" height="130"></canvas>
+            <span class="sig-hint-text">Sign here</span>
+          </div>
+          <button type="button" id="sig-clear-btn">Clear</button>
+          <input type="hidden" id="signature" name="signature">
+        </div>
+
+        <div class="form-nav">
+          <button type="button" class="btn btn-secondary" onclick="goTo(5)">&larr; Back</button>
           <button type="submit" class="btn btn-primary" id="submit-btn">Submit Installation</button>
         </div>
       </section>
@@ -460,8 +539,9 @@
 
   </main>
 
-  <footer style="text-align:center;padding:12px;font-size:0.72rem;color:#aaa;">v2026.06.11.2</footer>
+  <footer style="text-align:center;padding:12px;font-size:0.72rem;color:#aaa;">v2026.06.11.3</footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
   <script src="app.js"></script>
   <script src="scanner.js"></script>
   <script>

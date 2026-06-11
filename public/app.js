@@ -1,7 +1,7 @@
 'use strict';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const TOTAL_PAGES = 5;
+const TOTAL_PAGES = 6;
 
 const CHANNEL_OPTIONS = [
   'Front', 'Rear', 'Driver Facing', 'Left Side', 'Right Side',
@@ -52,17 +52,24 @@ const PAGE_FIELDS = {
   3: PHOTO_FIELDS,
   4: ['fleet_company', 'depot', 'installation_date'],
   5: ['installer_name', 'installer_company', 'installer_mobile', 'installer_email'],
+  6: [], // all optional
 };
 
 // ── State ──────────────────────────────────────────────────────────────────────
 let currentPage = 1;
 let cameraValue = '';
 let channelCount = 0;
+let sigPad       = null;
+let workPhotos   = [];
+let jobParts     = [];
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   populateChannelDropdowns();
   initPhotoUploads();
+  initSignaturePad();
+  initWorkPhotos();
+  initPartsTable();
   setDefaultDate();
   document.getElementById('onboarding-form').addEventListener('submit', handleSubmit);
   goTo(1);
@@ -244,10 +251,117 @@ function clearAlert() {
   el.textContent = ''; el.classList.remove('visible');
 }
 
+// ── Signature pad ─────────────────────────────────────────────────────────────
+function initSignaturePad() {
+  const canvas  = document.getElementById('sig-canvas-main');
+  if (!canvas || typeof SignaturePad === 'undefined') return;
+  const wrapper = document.getElementById('sig-wrapper-main');
+
+  function resize() {
+    const ratio   = window.devicePixelRatio || 1;
+    canvas.width  = wrapper.offsetWidth * ratio;
+    canvas.height = 130 * ratio;
+    canvas.getContext('2d').scale(ratio, ratio);
+    if (sigPad) sigPad.clear();
+  }
+
+  sigPad = new SignaturePad(canvas, { penColor: '#003087', minWidth: 1.5, maxWidth: 3 });
+  resize();
+  window.addEventListener('resize', resize);
+
+  document.getElementById('sig-clear-btn').addEventListener('click', () => sigPad.clear());
+}
+
+// ── Work photos ───────────────────────────────────────────────────────────────
+function initWorkPhotos() {
+  const input = document.getElementById('work-photos-input');
+  if (!input) return;
+  input.addEventListener('change', (e) => {
+    for (const f of Array.from(e.target.files)) {
+      if (workPhotos.length >= 5) break;
+      workPhotos.push(f);
+    }
+    input.value = '';
+    renderWorkPhotos();
+  });
+}
+
+function renderWorkPhotos() {
+  const grid  = document.getElementById('work-photo-previews');
+  const count = document.getElementById('work-photo-count');
+  if (!grid) return;
+  grid.innerHTML = '';
+  workPhotos.forEach((f, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'work-photo-thumb';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    img.alt = f.name;
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'remove-work-photo';
+    rm.innerHTML = '&#215;';
+    rm.addEventListener('click', () => {
+      URL.revokeObjectURL(img.src);
+      workPhotos.splice(i, 1);
+      renderWorkPhotos();
+    });
+    thumb.appendChild(img); thumb.appendChild(rm);
+    grid.appendChild(thumb);
+  });
+  if (count) count.textContent = workPhotos.length
+    ? `${workPhotos.length} of 5 photo${workPhotos.length !== 1 ? 's' : ''} added` : '';
+}
+
+// ── Parts table ───────────────────────────────────────────────────────────────
+function initPartsTable() {
+  const btn = document.getElementById('add-part-btn-main');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    jobParts.push({ name: '', quantity: 1 });
+    renderParts();
+    const inputs = document.querySelectorAll('.part-name-main');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+}
+
+function renderParts() {
+  const list   = document.getElementById('parts-list-main');
+  const header = document.getElementById('parts-header-main');
+  if (!list) return;
+  header.style.display = jobParts.length ? 'grid' : 'none';
+  list.innerHTML = '';
+  jobParts.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'parts-row';
+    row.innerHTML = `
+      <input type="text"   class="part-name-main" placeholder="Part / description" value="${escHtml(p.name)}" data-i="${i}">
+      <input type="number" class="part-qty-main"  placeholder="Qty" min="1" value="${p.quantity || 1}" data-i="${i}">
+      <button type="button" class="remove-part-row" data-i="${i}" aria-label="Remove">&#215;</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.part-name-main').forEach((el) =>
+    el.addEventListener('input', (e) => { jobParts[+e.target.dataset.i].name = e.target.value; syncParts(); }));
+  list.querySelectorAll('.part-qty-main').forEach((el) =>
+    el.addEventListener('input', (e) => { jobParts[+e.target.dataset.i].quantity = +e.target.value || 1; syncParts(); }));
+  list.querySelectorAll('.remove-part-row').forEach((el) =>
+    el.addEventListener('click', (e) => { jobParts.splice(+e.target.dataset.i, 1); renderParts(); syncParts(); }));
+  syncParts();
+}
+
+function syncParts() {
+  const el = document.getElementById('parts_used');
+  if (el) el.value = JSON.stringify(jobParts);
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 // ── Submit ─────────────────────────────────────────────────────────────────────
 async function handleSubmit(e) {
   e.preventDefault();
-  if (!validatePage(5)) return;
+  if (!validatePage(6)) return;
 
   const formEl    = document.getElementById('onboarding-form');
   const spinner   = document.getElementById('spinner');
@@ -271,11 +385,20 @@ async function handleSubmit(e) {
     if (!navigator.onLine)
       throw new Error('You appear to be offline. Please check your connection and try again.');
 
+    // Capture signature before building FormData
+    if (sigPad && !sigPad.isEmpty()) {
+      document.getElementById('signature').value = sigPad.toDataURL('image/png');
+    }
+
     const formData = new FormData(formEl);
     formData.set('vehicle_registration',
       (formData.get('vehicle_registration') || '').toUpperCase().replace(/\s/g, ''));
     formData.set('vin',
       (formData.get('vin') || '').toUpperCase().replace(/\s/g, ''));
+
+    // Remove file input placeholder; append actual work photo File objects
+    formData.delete('work_photos');
+    workPhotos.forEach((f) => formData.append('work_photos', f));
 
     const res  = await fetch('/api/submit', { method: 'POST', body: formData });
     const data = await res.json();
@@ -369,6 +492,15 @@ function resetForm() {
   document.querySelectorAll('.valid, .invalid').forEach((el) => {
     el.classList.remove('valid', 'invalid');
   });
+
+  // Reset job sheet state
+  if (sigPad) sigPad.clear();
+  document.getElementById('signature').value = '';
+  workPhotos.forEach((f) => { try { URL.revokeObjectURL(f); } catch (_) {} });
+  workPhotos = [];
+  renderWorkPhotos();
+  jobParts = [];
+  renderParts();
 
   setDefaultDate();
   goTo(1);

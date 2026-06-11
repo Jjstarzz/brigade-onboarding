@@ -74,6 +74,9 @@ function validateSubmission(req, res, next) {
     return next(err);
   }
 
+  let jobParts = [];
+  try { jobParts = JSON.parse(b.parts_used || '[]'); } catch {}
+
   req.validated = {
     product_type:         b.product_type,
     sim_number:           b.sim_number,
@@ -90,6 +93,13 @@ function validateSubmission(req, res, next) {
     installer_mobile:     b.installer_mobile.trim(),
     installer_email:      b.installer_email.trim().toLowerCase(),
     comments:             (b.comments || '').trim(),
+    // Job sheet fields (all optional)
+    issue_reported:       (b.issue_reported   || '').trim().slice(0, 2000),
+    work_carried_out:     (b.work_carried_out  || '').trim().slice(0, 2000),
+    outcome:              (b.outcome          || '').trim().slice(0, 1000),
+    parts_used:           jobParts,
+    unused_kit:           (b.unused_kit       || '').trim().slice(0, 500),
+    signature:            b.signature         || '',
   };
 
   next();
