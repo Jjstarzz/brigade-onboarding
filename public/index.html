@@ -115,7 +115,7 @@
               placeholder="8944XXXXXXXXXXXXXXX"
               required
             >
-            <button type="button" class="scan-btn" onclick="openScanner('sim_number','SIM Number')" title="Scan barcode">&#x1F4F7;</button>
+            <button type="button" class="scan-btn" onclick="openScanner('sim_number')" title="Scan barcode">&#x1F4F7;</button>
           </div>
           <span class="field-error" id="err-sim_number"></span>
         </div>
@@ -133,7 +133,7 @@
               placeholder="e.g. MDR-00123456"
               required
             >
-            <button type="button" class="scan-btn" onclick="openScanner('device_id','Device ID')" title="Scan barcode">&#x1F4F7;</button>
+            <button type="button" class="scan-btn" onclick="openScanner('device_id')" title="Scan barcode">&#x1F4F7;</button>
           </div>
           <span class="field-error" id="err-device_id"></span>
         </div>
@@ -255,7 +255,7 @@
               style="text-transform:uppercase"
               required
             >
-            <button type="button" class="scan-btn" onclick="openScanner('vehicle_registration','Vehicle Registration')" title="Scan barcode">&#x1F4F7;</button>
+            <button type="button" class="scan-btn" onclick="openScanner('vehicle_registration')" title="Scan barcode">&#x1F4F7;</button>
           </div>
           <span class="field-error" id="err-vehicle_registration"></span>
         </div>
@@ -277,7 +277,7 @@
               style="text-transform:uppercase"
               required
             >
-            <button type="button" class="scan-btn" onclick="openScanner('vin','VIN')" title="Scan barcode">&#x1F4F7;</button>
+            <button type="button" class="scan-btn" onclick="openScanner('vin')" title="Scan barcode">&#x1F4F7;</button>
           </div>
           <span class="field-error" id="err-vin"></span>
         </div>
@@ -457,20 +457,7 @@
 
   </main>
 
-  <!-- ── Barcode Scanner Modal ──────────────────────────────────────────────── -->
-  <div id="scanner-modal" class="scanner-modal" role="dialog" aria-modal="true" aria-label="Barcode scanner">
-    <div class="scanner-header">
-      <span id="scanner-label">Scanning</span>
-      <button type="button" class="scanner-close-btn" onclick="closeScanner()" aria-label="Close scanner">&#10005;</button>
-    </div>
-    <div class="scanner-viewport">
-      <div id="scanner-viewfinder"></div>
-    </div>
-    <p id="scanner-status" class="scanner-status">Starting camera…</p>
-    <button type="button" id="scanner-photo-btn" onclick="scannerTakePhoto()" class="btn btn-primary scanner-photo-btn" style="display:none">&#128247; Take Photo Instead</button>
-  </div>
-
-  <footer style="text-align:center;padding:12px;font-size:0.72rem;color:#aaa;">v2026.06.05.3</footer>
+  <footer style="text-align:center;padding:12px;font-size:0.72rem;color:#aaa;">v2026.06.05.4</footer>
 
   <script src="app.js"></script>
   <script src="scanner.js"></script>
