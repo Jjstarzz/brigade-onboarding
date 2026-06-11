@@ -1,11 +1,21 @@
 'use strict';
 
-const express = require('express');
-const path    = require('path');
-const fs      = require('fs');
-const db      = require('../db');
+const express        = require('express');
+const path           = require('path');
+const fs             = require('fs');
+const db             = require('../db');
+const jobsDb         = require('../jobsDb');
+const generateJobPdf = require('../utils/jobPdf');
 
 const router = express.Router();
+
+function navTabs(active) {
+  const t = (label, href, key) => {
+    const on = active === key;
+    return `<a href="${href}" style="display:inline-block;padding:10px 20px;color:#fff;text-decoration:none;font-size:.875rem;font-weight:${on ? '700' : '400'};border-bottom:3px solid ${on ? '#fff' : 'transparent'}">${label}</a>`;
+  };
+  return `<div style="background:#002070">${t('Installations', '/admin', 'installs')}${t('Job Sheets', '/admin/jobs', 'jobs')}</div>`;
+}
 
 const PRODUCT_TYPES = ['MDR 504', 'MDR 508', 'MDR 641', 'MDR 644', 'DC-204-AI', 'CGLite'];
 const STATUSES      = ['Pending', 'Reviewed', 'Approved', 'Flagged'];
@@ -217,6 +227,7 @@ router.get('/', (req, res) => {
     <h1>Brigade Electronics — Installation Records</h1>
     <span style="font-size:.85rem;opacity:.75">${new Date().toLocaleDateString('en-GB')}</span>
   </header>
+  ${navTabs('installs')}
 
   <!-- Stats -->
   <div class="stats-section">
@@ -386,6 +397,126 @@ router.get('/pdf/:id', (req, res) => {
     return res.status(404).send('PDF file not found on disk.');
 
   res.download(safePath, `${id}_certificate.pdf`);
+});
+
+// ── GET /admin/jobs ───────────────────────────────────────────────────────────
+router.get('/jobs', (req, res) => {
+  const { company, vehicle_reg } = req.query;
+
+  let jobs = jobsDb.getAll();
+  if (company)     jobs = jobs.filter((j) =>
+    (j.customer_name || '').toLowerCase().includes(company.toLowerCase()) ||
+    (j.engineer_company || '').toLowerCase().includes(company.toLowerCase()));
+  if (vehicle_reg) jobs = jobs.filter((j) =>
+    (j.vehicle_reg || '').toLowerCase().includes(vehicle_reg.toLowerCase().replace(/\s/g, '')));
+
+  const isFiltered = company || vehicle_reg;
+
+  const tableRows = jobs.map((j) => `
+    <tr>
+      <td>${esc(j.created_at ? j.created_at.slice(0, 10) : '')}</td>
+      <td><strong>${esc(j.ref)}</strong></td>
+      <td>${esc(j.customer_name)}</td>
+      <td>${esc(j.site_location)}</td>
+      <td>${esc(j.vehicle_reg)}</td>
+      <td>${esc(j.date_of_attendance)}</td>
+      <td>${esc(j.engineer_name)}</td>
+      <td>${esc(j.engineer_company)}</td>
+      <td style="max-width:200px;white-space:normal">${esc(j.outcome)}</td>
+      <td><a class="btn" href="/admin/jobs/${encodeURIComponent(j.ref)}/pdf">PDF</a></td>
+    </tr>`).join('');
+
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Brigade Admin — Job Sheets</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, Arial, sans-serif; background: #f4f6fa; color: #1a1a1a; }
+    header { background: #003087; color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 1.1rem; }
+    .filter-section { padding: 20px 24px 0; }
+    .filter-form { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-group label { font-size: .75rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: .04em; }
+    .filter-group input { padding: 7px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: .875rem; min-width: 180px; }
+    .toolbar { padding: 16px 24px; display: flex; gap: 12px; align-items: center; }
+    .btn { padding: 7px 14px; background: #003087; color: #fff; border: none; border-radius: 6px;
+      cursor: pointer; text-decoration: none; font-size: .8rem; }
+    .btn:hover { background: #0057c8; }
+    .btn-ghost { background: transparent; color: #003087; border: 1px solid #003087; }
+    .btn-ghost:hover { background: #f0f4fb; }
+    .count { font-size: .875rem; color: #555; }
+    .table-wrap { overflow-x: auto; padding: 0 24px 40px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px;
+      overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    th { background: #003087; color: #fff; padding: 10px 12px; text-align: left;
+      font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+    td { padding: 10px 12px; font-size: .875rem; border-bottom: 1px solid #eee; white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f0f4fb; }
+    .empty { text-align: center; padding: 40px; color: #888; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Brigade Electronics — Job Sheets</h1>
+    <span style="font-size:.85rem;opacity:.75">${new Date().toLocaleDateString('en-GB')}</span>
+  </header>
+  ${navTabs('jobs')}
+
+  <div class="filter-section">
+    <form class="filter-form" method="GET" action="/admin/jobs">
+      <div class="filter-group">
+        <label>Company</label>
+        <input type="text" name="company" value="${escAttr(company)}" placeholder="Customer or engineer company">
+      </div>
+      <div class="filter-group">
+        <label>Vehicle Reg</label>
+        <input type="text" name="vehicle_reg" value="${escAttr(vehicle_reg)}" placeholder="e.g. AB12 CDE">
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <button type="submit" class="btn">Search</button>
+        ${isFiltered ? '<a class="btn btn-ghost" href="/admin/jobs">Clear</a>' : ''}
+      </div>
+    </form>
+  </div>
+
+  <div class="toolbar">
+    <span class="count">${jobs.length} job${jobs.length !== 1 ? 's' : ''}${isFiltered ? ' (filtered)' : ''}</span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Job Ref</th><th>Customer</th><th>Site</th>
+          <th>Vehicle Reg</th><th>Attendance</th><th>Engineer</th>
+          <th>Company</th><th>Outcome</th><th>PDF</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${jobs.length ? tableRows : '<tr><td colspan="10" class="empty">No job sheets found.</td></tr>'}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>`);
+});
+
+// ── GET /admin/jobs/:ref/pdf ──────────────────────────────────────────────────
+router.get('/jobs/:ref/pdf', (req, res, next) => {
+  const ref = req.params.ref.replace(/[^A-Z0-9-]/gi, '');
+  const job = jobsDb.getByRef(ref);
+  if (!job) return res.status(404).send('Job not found.');
+  try {
+    generateJobPdf(job, res);
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = router;

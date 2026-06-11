@@ -17,6 +17,7 @@ if (missing.length) {
 
 const submitRoute = require('./routes/submit');
 const adminRoute  = require('./routes/admin');
+const jobsRoute   = require('./routes/jobs');
 
 const app = express();
 
@@ -75,6 +76,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
 app.use('/api/submit', submitRoute);
+app.use('/api/jobs',   jobsRoute);
 app.use('/admin', adminRoute);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────

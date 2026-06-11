@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Brigade Electronics job sheet">
+  <meta name="theme-color" content="#003087">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Brigade Electronics — Job Sheet</title>
+  <link rel="icon" href="/blue logo.png" type="image/png">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    /* ── Nav strip ─────────────────────────────────────────────────────────── */
+    .nav-strip {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 10px 20px;
+      font-size: .875rem;
+    }
+    .nav-strip a { color: var(--brand-blue); text-decoration: none; }
+    .nav-strip a:hover { text-decoration: underline; }
+
+    /* ── Parts table ───────────────────────────────────────────────────────── */
+    .parts-row {
+      display: grid;
+      grid-template-columns: 1fr 90px 40px;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .parts-row input { width: 100%; }
+    .remove-part {
+      width: 36px; height: 36px; padding: 0;
+      border: 1px solid #e0e0e0; border-radius: var(--radius);
+      background: #fff; color: #c0392b; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .remove-part:hover { background: #fdecea; }
+    .parts-header {
+      display: grid;
+      grid-template-columns: 1fr 90px 40px;
+      gap: 8px;
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 6px;
+    }
+    #add-part-btn {
+      margin-top: 4px;
+      padding: 8px 14px;
+      background: var(--brand-light);
+      color: var(--brand-blue);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .875rem;
+      cursor: pointer;
+    }
+    #add-part-btn:hover { background: var(--brand-blue); color: #fff; }
+
+    /* ── Signature ─────────────────────────────────────────────────────────── */
+    .sig-wrapper {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      position: relative;
+      touch-action: none;
+    }
+    #sig-canvas { display: block; width: 100%; cursor: crosshair; border-radius: var(--radius); }
+    .sig-hint {
+      position: absolute;
+      bottom: 8px; right: 10px;
+      font-size: .7rem;
+      color: #bbb;
+      pointer-events: none;
+    }
+    #sig-clear {
+      margin-top: 6px;
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .8rem;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    #sig-clear:hover { background: #f5f5f5; }
+    .sig-error { color: var(--error); font-size: .8rem; margin-top: 4px; display: none; }
+
+    /* ── Photo upload ──────────────────────────────────────────────────────── */
+    .photo-upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--brand-light);
+      color: var(--brand-blue);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      font-size: .9rem;
+      cursor: pointer;
+      width: 100%;
+      justify-content: center;
+    }
+    .photo-upload-btn:hover { background: #d5e4f7; }
+    #photo-previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .photo-thumb {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #f0f0f0;
+    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-thumb .remove-photo {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 22px; height: 22px;
+      background: rgba(0,0,0,.55);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: .75rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .photo-count { font-size: .8rem; color: var(--muted); margin-top: 6px; }
+
+    /* ── Error banner ──────────────────────────────────────────────────────── */
+    .error-banner {
+      background: #fdecea;
+      border: 1px solid #c0392b;
+      color: #c0392b;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: .875rem;
+      margin: 0 16px 16px;
+    }
+
+    /* ── Success screen ────────────────────────────────────────────────────── */
+    #success-screen {
+      display: none;
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 100;
+      overflow-y: auto;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    #success-screen.visible { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .success-icon { font-size: 3rem; margin-bottom: 16px; }
+    .success-ref {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--brand-blue);
+      background: var(--brand-light);
+      padding: 10px 24px;
+      border-radius: var(--radius);
+      margin: 12px 0 24px;
+      letter-spacing: .05em;
+    }
+    .success-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <img src="/blue logo.png" alt="Brigade" class="header-logo-img">
+    <div>
+      <h1>Brigade Electronics</h1>
+      <p>Job Sheet</p>
+    </div>
+  </header>
+
+  <div class="nav-strip">
+    <a href="/">← Installation Onboarding</a>
+  </div>
+
+  <main style="max-width:680px;margin:0 auto;padding:16px">
+
+    <form id="job-form" novalidate>
+
+      <!-- ── Customer & Site ───────────────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">Customer &amp; Site</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="customer_name">Customer Name <span class="req">*</span></label>
+            <input type="text" id="customer_name" name="customer_name" required autocomplete="organization">
+          </div>
+          <div class="form-group">
+            <label for="site_location">Site Location <span class="req">*</span></label>
+            <input type="text" id="site_location" name="site_location" required>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Attendance & Vehicle ──────────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">Attendance</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date_of_attendance">Date of Attendance <span class="req">*</span></label>
+            <input type="date" id="date_of_attendance" name="date_of_attendance" required>
+          </div>
+          <div class="form-group">
+            <label for="vehicle_reg">Vehicle Registration</label>
+            <div class="scan-input-group">
+              <input type="text" id="vehicle_reg" name="vehicle_reg" autocomplete="off" style="text-transform:uppercase">
+              <button type="button" class="scan-btn" onclick="openScanner('vehicle_reg')" title="Scan barcode">&#x1F4F7;</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Engineer ──────────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">Engineer</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="engineer_name">Engineer Name <span class="req">*</span></label>
+            <input type="text" id="engineer_name" name="engineer_name" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="engineer_company">Company <span class="req">*</span></label>
+            <input type="text" id="engineer_company" name="engineer_company" required autocomplete="organization">
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Job Details ────────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">Job Details</h2>
+        <div class="form-group">
+          <label for="issue_reported">Issue Reported <span class="req">*</span></label>
+          <textarea id="issue_reported" name="issue_reported" required rows="3" placeholder="Describe the fault or task reported..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="work_carried_out">Work Carried Out <span class="req">*</span></label>
+          <textarea id="work_carried_out" name="work_carried_out" required rows="4" placeholder="Detail all work completed..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="outcome">Outcome <span class="req">*</span></label>
+          <textarea id="outcome" name="outcome" required rows="2" placeholder="e.g. Job complete, awaiting parts, etc."></textarea>
+        </div>
+      </section>
+
+      <!-- ── Parts Used ─────────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">Parts Used</h2>
+        <div id="parts-header" class="parts-header" style="display:none">
+          <span>Part / Description</span><span>Quantity</span><span></span>
+        </div>
+        <div id="parts-list"></div>
+        <button type="button" id="add-part-btn">+ Add Part</button>
+        <input type="hidden" id="parts_used" name="parts_used" value="[]">
+      </section>
+
+      <!-- ── Unused Kit ─────────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">Unused Kit</h2>
+        <div class="form-group">
+          <textarea id="unused_kit" name="unused_kit" rows="2" placeholder="List any parts or kit returned unused, or write 'None'..."></textarea>
+        </div>
+      </section>
+
+      <!-- ── Signature ──────────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">Engineer Signature <span class="req">*</span></h2>
+        <div class="sig-wrapper">
+          <canvas id="sig-canvas" height="140"></canvas>
+          <span class="sig-hint">Sign here</span>
+        </div>
+        <button type="button" id="sig-clear">Clear</button>
+        <div class="sig-error" id="sig-error">Please provide a signature before submitting.</div>
+        <input type="hidden" id="signature" name="signature">
+      </section>
+
+      <!-- ── Photos ────────────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2 class="section-title">Photos of Work</h2>
+        <label class="photo-upload-btn" for="photos-input">
+          <span>&#x1F4F7;</span> Add Photos (up to 5)
+        </label>
+        <input type="file" id="photos-input" accept="image/*" multiple style="display:none">
+        <div id="photo-previews"></div>
+        <p class="photo-count" id="photo-count"></p>
+      </section>
+
+      <!-- ── Error / Submit ─────────────────────────────────────────────────── -->
+      <div id="form-error" class="error-banner" style="display:none"></div>
+
+      <div style="padding:0 0 32px">
+        <button type="submit" id="submit-btn" class="btn-primary" style="width:100%">Submit Job Sheet</button>
+      </div>
+
+    </form>
+  </main>
+
+  <!-- ── Success Screen ──────────────────────────────────────────────────────── -->
+  <div id="success-screen">
+    <div class="success-icon">&#x2705;</div>
+    <h2 style="font-size:1.4rem;color:#1a1a1a">Job Sheet Submitted</h2>
+    <p style="color:#555;margin-top:8px">Your job reference is:</p>
+    <div class="success-ref" id="success-ref"></div>
+    <p style="color:#555;font-size:.875rem;max-width:340px;text-align:center">
+      Keep this reference for your records. Admin can find and download the PDF from the admin portal.
+    </p>
+    <div class="success-actions" style="margin-top:24px">
+      <button class="btn-primary" onclick="resetForm()">Submit Another Job</button>
+      <a href="/" class="btn-secondary" style="display:inline-block;padding:12px 24px;text-decoration:none">Installation Form</a>
+    </div>
+  </div>
+
+  <footer style="text-align:center;padding:12px;font-size:0.72rem;color:#aaa;">v2026.06.11.2</footer>
+
+  <script src="/scanner.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+  <script src="/job-sheet.js"></script>
+</body>
+</html>
