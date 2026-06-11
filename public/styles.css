@@ -543,32 +543,14 @@ select {
 
 .scanner-close-btn:hover { opacity: 1; }
 
-.scanner-viewport { flex: 1; position: relative; overflow: hidden; }
+.scanner-viewport { flex: 1; position: relative; overflow: hidden; background: #000; }
 
-#scanner-video { width: 100%; height: 100%; object-fit: cover; }
+#scanner-viewfinder { width: 100%; height: 100%; }
 
-.scanner-reticle {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 260px; height: 110px;
-  border: 2px solid rgba(255,255,255,.3);
-  border-radius: 8px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,.5);
-  pointer-events: none;
-}
-
-.scanner-reticle::before,
-.scanner-reticle::after {
-  content: '';
-  position: absolute;
-  width: 22px; height: 22px;
-  border-color: #00d4aa;
-  border-style: solid;
-}
-
-.scanner-reticle::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
-.scanner-reticle::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+/* html5-qrcode injects its own elements — make them fill the viewport */
+#scanner-viewfinder video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+#scanner-viewfinder canvas { display: none !important; }
+#scanner-viewfinder > div { width: 100% !important; height: 100% !important; padding: 0 !important; border: none !important; }
 
 .scanner-status {
   color: rgba(255,255,255,.8);

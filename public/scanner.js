@@ -1,165 +1,42 @@
 (function () {
   let targetField = null;
-  let nativeStream = null;
-  let animFrame = null;
-  let zxingReader = null;
+  let html5Scanner = null;
 
   window.openScanner = async function (fieldId, label) {
     targetField = fieldId;
     document.getElementById('scanner-label').textContent = 'Scan ' + label;
-    setStatus('Starting camera…');
+    setStatus('Loading scanner…');
     setModal(true);
-    await startZXing();
+    await startHtml5();
   };
 
-  // Photo fallback triggered by the "Take Photo" button in the scanner modal
-  window.scannerTakePhoto = function () {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.src = url;
-      img.onload = async () => {
-        try {
-          const canvas = document.createElement('canvas');
-          const max = 1920;
-          const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-          canvas.width  = Math.round(img.naturalWidth  * scale);
-          canvas.height = Math.round(img.naturalHeight * scale);
-          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-
-          if ('BarcodeDetector' in window) {
-            const detector = new BarcodeDetector({
-              formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'code_93', 'itf']
-            });
-            let hits = await detector.detect(canvas);
-            if (!hits.length) hits = await detector.detect(img);
-            if (hits.length) { onDetected(hits[0].rawValue); return; }
-          }
-          await loadZXing();
-          const r = new window.ZXing.BrowserMultiFormatReader();
-          const result = await r.decodeFromImageElement(img);
-          onDetected(result.getText());
-        } catch (_) {
-          alert('No barcode detected. Make sure the barcode fills the frame and is well-lit.');
-        } finally {
-          URL.revokeObjectURL(url);
-        }
-      };
-    };
-    input.click();
-  };
-
-  async function startNative() {
+  async function startHtml5() {
     try {
-      // Enumerate cameras and prefer the main rear camera (avoids fixed-focus ultra-wide)
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const cams = devices.filter(d => d.kind === 'videoinput');
-      const mainCam = cams.find(d => /back|rear/i.test(d.label) && !/ultra|wide|macro/i.test(d.label))
-                   || cams.find(d => /back|rear/i.test(d.label))
-                   || null;
+      await loadLib();
+      html5Scanner = new Html5Qrcode('scanner-viewfinder');
 
-      const constraints = mainCam
-        ? { video: { deviceId: { exact: mainCam.deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } }
-        : { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } };
+      // Get permission first so camera labels are readable
+      const tmp = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      tmp.getTracks().forEach(t => t.stop());
 
-      nativeStream = await navigator.mediaDevices.getUserMedia(constraints);
-      const vid = document.getElementById('scanner-video');
-      vid.srcObject = nativeStream;
-      await vid.play();
+      // Pick main rear camera by label (avoids fixed-focus ultra-wide on Samsung)
+      const devices = await Html5Qrcode.getCameras();
+      const main = devices.find(d => /^back camera$/i.test(d.label))
+                || devices.find(d => /back|rear/i.test(d.label) && !/ultra|wide|macro|tele/i.test(d.label))
+                || devices.find(d => /back|rear/i.test(d.label))
+                || devices[devices.length - 1]
+                || null;
 
-      const track = nativeStream.getVideoTracks()[0];
-      if (track.applyConstraints) {
-        try { await track.applyConstraints({ focusMode: 'continuous' }); } catch (_) {}
-      }
+      const cameraId = main ? { deviceId: main.id } : { facingMode: 'environment' };
 
-      // Tap to re-focus
-      vid.addEventListener('click', async () => {
-        try {
-          await track.applyConstraints({ focusMode: 'single-shot' });
-          setTimeout(() => track.applyConstraints({ focusMode: 'continuous' }).catch(() => {}), 600);
-        } catch (_) {}
-      });
-
-      setStatus('Hold barcode steady in the box…');
-
-      const detector = new BarcodeDetector({
-        formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'code_93', 'itf']
-      });
-
-      // Use takePhoto() which triggers real autofocus — far sharper than video frames
-      const imageCapture = ('ImageCapture' in window) ? new ImageCapture(track) : null;
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
-      async function tick() {
-        if (!nativeStream) return;
-        try {
-          let source;
-          if (imageCapture) {
-            try {
-              const blob = await imageCapture.takePhoto();
-              source = await createImageBitmap(blob);
-            } catch (_) {
-              try { source = await imageCapture.grabFrame(); } catch (_2) {}
-            }
-          }
-          if (!source && vid.videoWidth) {
-            canvas.width = vid.videoWidth;
-            canvas.height = vid.videoHeight;
-            ctx.drawImage(vid, 0, 0);
-            source = canvas;
-          }
-          if (source) {
-            const hits = await detector.detect(source);
-            if (source.close) source.close();
-            if (hits.length) { onDetected(hits[0].rawValue); return; }
-          }
-        } catch (_) {}
-        animFrame = setTimeout(() => { animFrame = requestAnimationFrame(tick); }, 800);
-      }
-      tick();
-
-      document.getElementById('scanner-photo-btn').style.display = 'inline-block';
-    } catch (_) {
-      window.closeScanner();
-      alert('Camera permission is required. Please allow access and try again.');
-    }
-  }
-
-  async function startZXing() {
-    try {
-      setStatus('Loading scanner…');
-      await loadZXing();
-
-      // Step 1: trigger permission so camera labels become readable
-      const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      tempStream.getTracks().forEach(t => t.stop());
-
-      // Step 2: enumerate with labels now available — find main rear camera
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const cams = devices.filter(d => d.kind === 'videoinput');
-      // Samsung labels: "Back camera" (main), "Back Ultra wide camera", "Back Telephoto camera"
-      const mainCam = cams.find(d => /^back camera$/i.test(d.label))
-                   || cams.find(d => /back|rear/i.test(d.label) && !/ultra|wide|macro|tele/i.test(d.label))
-                   || cams.find(d => /back|rear/i.test(d.label))
-                   || null;
-      const deviceId = mainCam ? mainCam.deviceId : undefined;
-
-      const hints = new Map();
-      hints.set(window.ZXing.DecodeHintType.TRY_HARDER, true);
-      zxingReader = new window.ZXing.BrowserMultiFormatReader(hints);
+      await html5Scanner.start(
+        cameraId,
+        { fps: 10, qrbox: { width: 280, height: 120 }, aspectRatio: 1.7 },
+        (text) => onDetected(text),
+        () => {}
+      );
 
       setStatus('Point camera at barcode');
-      await zxingReader.decodeFromVideoDevice(deviceId, 'scanner-video', (result) => {
-        if (result) onDetected(result.getText());
-      });
-
       document.getElementById('scanner-photo-btn').style.display = 'inline-block';
     } catch (err) {
       console.error('Scanner error:', err);
@@ -168,7 +45,7 @@
     }
   }
 
-  window.scannerPhoto = function () {
+  window.scannerTakePhoto = function () {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -176,21 +53,13 @@
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.src = url;
-      img.onload = async () => {
-        try {
-          await loadZXing();
-          const r = new window.ZXing.BrowserMultiFormatReader();
-          const result = await r.decodeFromImageElement(img);
-          onDetected(result.getText());
-        } catch (_) {
-          alert('No barcode found in the photo. Please try again with a clearer image.');
-        } finally {
-          URL.revokeObjectURL(url);
-        }
-      };
+      try {
+        await loadLib();
+        const result = await Html5Qrcode.scanFile(file, true);
+        onDetected(result);
+      } catch (_) {
+        alert('No barcode detected. Make sure the barcode fills the frame and is well-lit.');
+      }
     };
     input.click();
   };
@@ -204,12 +73,14 @@
     window.closeScanner();
   }
 
-  window.closeScanner = function () {
-    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-    if (zxingReader) { try { zxingReader.reset(); } catch (_) {} zxingReader = null; }
-    if (nativeStream) { nativeStream.getTracks().forEach(t => t.stop()); nativeStream = null; }
-    const vid = document.getElementById('scanner-video');
-    if (vid) vid.srcObject = null;
+  window.closeScanner = async function () {
+    if (html5Scanner) {
+      try {
+        if (html5Scanner.isScanning) await html5Scanner.stop();
+        html5Scanner.clear();
+      } catch (_) {}
+      html5Scanner = null;
+    }
     document.getElementById('scanner-photo-btn').style.display = 'none';
     setModal(false);
     targetField = null;
@@ -223,13 +94,13 @@
     document.getElementById('scanner-status').textContent = msg;
   }
 
-  function loadZXing() {
+  function loadLib() {
     return new Promise((resolve, reject) => {
-      if (window.ZXing) { resolve(); return; }
+      if (window.Html5Qrcode) { resolve(); return; }
       const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js';
+      s.src = 'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';
       s.onload = resolve;
-      s.onerror = () => reject(new Error('ZXing load failed'));
+      s.onerror = () => reject(new Error('Failed to load scanner library'));
       document.head.appendChild(s);
     });
   }
