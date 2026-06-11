@@ -255,7 +255,6 @@ router.get('/', (req, res) => {
     <h1>Brigade Electronics — Installation Records</h1>
     <span style="font-size:.85rem;opacity:.75">${new Date().toLocaleDateString('en-GB')}</span>
   </header>
-  ${navTabs('installs')}
 
   <!-- Stats -->
   <div class="stats-section">
@@ -511,7 +510,6 @@ router.get('/jobs', (req, res) => {
     <h1>Brigade Electronics — Job Sheets</h1>
     <span style="font-size:.85rem;opacity:.75">${new Date().toLocaleDateString('en-GB')}</span>
   </header>
-  ${navTabs('jobs')}
 
   <div class="filter-section">
     <form class="filter-form" method="GET" action="/admin/jobs">
