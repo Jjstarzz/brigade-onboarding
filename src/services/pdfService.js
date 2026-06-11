@@ -118,10 +118,11 @@ function build(doc, d, photos, ocrResults) {
 
   if (hasJobSheet) {
     // Divider bar — no new page, just continues flowing
-    doc.rect(50, doc.y, W, 20).fill(DBLUE);
+    const divY = doc.y;
+    doc.rect(50, divY, W, 20).fill(DBLUE);
     doc.fontSize(8).fillColor('#fff').font('Helvetica-Bold')
-       .text('JOB SHEET', 56, doc.y - 14, { width: W - 12, characterSpacing: 1 });
-    doc.y += 8;
+       .text('JOB SHEET', 56, divY + 6, { width: W - 12, characterSpacing: 1 });
+    doc.y = divY + 28;
 
     const txtFields = [
       ['Issue Reported',   d.issue_reported],
@@ -187,15 +188,22 @@ function build(doc, d, photos, ocrResults) {
   }
 
   // ── Footers ─────────────────────────────────────────────────────────────────
-  const total = doc.bufferedPageRange().count;
-  for (let i = 0; i < total; i++) {
+  // Must zero bottom margin before writing near the page edge, otherwise
+  // pdfkit treats the position as "past the margin" and creates overflow pages.
+  const range = doc.bufferedPageRange();
+  for (let i = range.start; i < range.start + range.count; i++) {
     doc.switchToPage(i);
+    const savedBottom = doc.page.margins.bottom;
+    doc.page.margins.bottom = 0;
+
     doc.rect(50, doc.page.height - 36, W, 18).fill('#f4f6fa');
     doc.fontSize(7).fillColor(MID).font('Helvetica')
        .text(
-         `Brigade Electronics Ltd  ·  ${d.onboarding_id}  ·  Page ${i + 1} of ${total}`,
-         50, doc.page.height - 30, { width: W, align: 'center' }
+         `Brigade Electronics Ltd  ·  ${d.onboarding_id}  ·  Page ${i - range.start + 1} of ${range.count}`,
+         50, doc.page.height - 30, { width: W, align: 'center', lineBreak: false }
        );
+
+    doc.page.margins.bottom = savedBottom;
   }
 }
 
