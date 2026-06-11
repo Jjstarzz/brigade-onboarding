@@ -318,15 +318,15 @@ router.get('/', (req, res) => {
     <div class="charts-row">
       <div class="chart-card">
         <h3>Installs per week — last 8 weeks</h3>
-        <canvas id="weeklyChart" height="120"></canvas>
+        <div style="position:relative;height:160px"><canvas id="weeklyChart"></canvas></div>
       </div>
       <div class="chart-card">
         <h3>By product type</h3>
-        <canvas id="productChart" height="120"></canvas>
+        <div style="position:relative;height:160px"><canvas id="productChart"></canvas></div>
       </div>
       <div class="chart-card">
         <h3>By status</h3>
-        <canvas id="statusChart" height="120"></canvas>
+        <div style="position:relative;height:160px"><canvas id="statusChart"></canvas></div>
       </div>
     </div>
   </div>
@@ -412,6 +412,7 @@ router.get('/', (req, res) => {
           datasets: [{ data: weekly.counts, backgroundColor: '#003087', borderRadius: 4, borderSkipped: false }],
         },
         options: {
+          responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => 'w/c ' + i[0].label } } },
           scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eee' } }, x: { grid: { display: false } } },
         },
@@ -424,11 +425,10 @@ router.get('/', (req, res) => {
         new Chart(document.getElementById('productChart'), {
           type: 'doughnut',
           data: { labels: prodKeys, datasets: [{ data: prodKeys.map((k) => prod[k]), backgroundColor: COLORS, borderWidth: 1 }] },
-          options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } } }, cutout: '60%' },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } } }, cutout: '60%' },
         });
       } else {
-        document.getElementById('productChart').parentElement.innerHTML += '<p style="text-align:center;color:#aaa;font-size:.8rem;padding-top:20px">No data yet</p>';
-        document.getElementById('productChart').style.display = 'none';
+        document.getElementById('productChart').parentElement.innerHTML = '<p style="text-align:center;color:#aaa;font-size:.8rem;padding-top:40px">No data yet</p>';
       }
 
       // Status doughnut
@@ -440,7 +440,7 @@ router.get('/', (req, res) => {
           labels: Object.keys(stat),
           datasets: [{ data: Object.values(stat), backgroundColor: Object.keys(stat).map((k) => statColors[k]), borderWidth: 1 }],
         },
-        options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } } }, cutout: '60%' },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } } }, cutout: '60%' },
       });
     })();
 
