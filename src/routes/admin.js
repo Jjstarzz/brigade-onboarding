@@ -120,6 +120,27 @@ router.get('/', (req, res) => {
   // ── Build table rows ──────────────────────────────────────────────────────
   const tableRows = rows.map((r) => {
     const status = r.status || 'Pending';
+
+    // Job sheet helpers
+    const truncCell = (val, max = 80) => {
+      const s = String(val || '');
+      return s.length > max
+        ? `<td title="${escAttr(s)}" style="max-width:180px;white-space:normal;font-size:.8rem">${esc(s.slice(0, max))}…</td>`
+        : `<td style="max-width:180px;white-space:normal;font-size:.8rem">${esc(s) || '—'}</td>`;
+    };
+
+    const parts = Array.isArray(r.parts_used) ? r.parts_used.filter((p) => p.name) : [];
+    const partsCell = parts.length
+      ? `<td style="white-space:normal;font-size:.8rem">${parts.map((p) => esc(`${p.name} (${p.quantity || 1})`)).join('<br>')}</td>`
+      : '<td>—</td>';
+
+    const sigCell = r.signature_path && fs.existsSync(r.signature_path)
+      ? `<td style="text-align:center">✓</td>`
+      : '<td style="text-align:center;color:#ccc">—</td>';
+
+    const wpCount = Array.isArray(r.work_photos) ? r.work_photos.filter((p) => p && fs.existsSync(p)).length : 0;
+    const wpCell  = wpCount ? `<td style="text-align:center">${wpCount}</td>` : '<td style="text-align:center;color:#ccc">—</td>';
+
     return `
     <tr>
       <td>${esc(r.created_at.slice(0, 10))}</td>
@@ -141,6 +162,13 @@ router.get('/', (req, res) => {
       <td>${esc(r.installer_mobile)}</td>
       <td>${esc(r.installer_email)}</td>
       <td>${esc(r.comments)}</td>
+      ${truncCell(r.issue_reported)}
+      ${truncCell(r.work_carried_out)}
+      ${truncCell(r.outcome, 60)}
+      ${partsCell}
+      ${truncCell(r.unused_kit, 60)}
+      ${sigCell}
+      ${wpCell}
       <td>${statusSelect(r.onboarding_id, status)}</td>
       <td>
         ${r.pdf_path && fs.existsSync(r.pdf_path)
@@ -304,11 +332,19 @@ router.get('/', (req, res) => {
           <th>Product</th><th>SIM Number</th><th>Device ID</th><th>Camera</th>
           <th>Fleet/Company</th><th>Depot</th><th>Install Date</th>
           <th>Installer</th><th>Company</th><th>Mobile</th><th>Email</th>
-          <th>Comments</th><th>Status</th><th>PDF</th>
+          <th>Comments</th>
+          <th style="background:#00245c">Issue Reported</th>
+          <th style="background:#00245c">Work Carried Out</th>
+          <th style="background:#00245c">Outcome</th>
+          <th style="background:#00245c">Parts Used</th>
+          <th style="background:#00245c">Unused Kit</th>
+          <th style="background:#00245c">Sig</th>
+          <th style="background:#00245c">Work Photos</th>
+          <th>Status</th><th>PDF</th>
         </tr>
       </thead>
       <tbody>
-        ${rows.length ? tableRows : '<tr><td colspan="21" class="empty">No submissions found.</td></tr>'}
+        ${rows.length ? tableRows : '<tr><td colspan="28" class="empty">No submissions found.</td></tr>'}
       </tbody>
     </table>
   </div>
@@ -364,14 +400,23 @@ router.get('/export', (req, res) => {
     'installation_date', 'installer_name', 'installer_company',
     'installer_mobile', 'installer_email', 'comments',
     'vehicle_make', 'vehicle_model', 'vehicle_year', 'vehicle_colour', 'vehicle_fuel_type',
+    'issue_reported', 'work_carried_out', 'outcome', 'unused_kit',
   ];
 
   const csvRows = [
     headers.join(','),
-    ...rows.map((r) =>
-      headers.map((h) => `"${String(r[h] || '').replace(/"/g, '""')}"`).join(',')
-    ),
+    ...rows.map((r) => {
+      const parts = Array.isArray(r.parts_used) ? r.parts_used.filter((p) => p.name) : [];
+      const partsStr = parts.map((p) => `${p.name} (${p.quantity || 1})`).join('; ');
+      return [
+        ...headers.map((h) => `"${String(r[h] || '').replace(/"/g, '""')}"`),
+        `"${partsStr.replace(/"/g, '""')}"`,
+      ].join(',');
+    }),
   ];
+
+  // fix: headers needs parts_used column
+  csvRows[0] = headers.join(',') + ',parts_used';
 
   const filename = `brigade_submissions_${new Date().toISOString().slice(0, 10)}.csv`;
   res.setHeader('Content-Type', 'text/csv');
