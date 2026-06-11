@@ -172,7 +172,8 @@ router.post('/', (req, res, next) => {
 
         // ── 5. Generate PDF ──────────────────────────────────────────────
         const pdfBuffer = await generateCertificate(
-          { ...d, onboarding_id: onboardingId, vehicleInfo },
+          { ...d, onboarding_id: onboardingId, vehicleInfo,
+            signature_path: signaturePath, work_photos: workPhotoPaths },
           photoPaths,
           ocrResults
         );

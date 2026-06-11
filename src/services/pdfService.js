@@ -95,16 +95,85 @@ function build(doc, d, photos, ocrResults) {
     doc.fontSize(10).fillColor(GREY).text(d.comments);
   }
 
+  // ── Job Sheet ──────────────────────────────────────────────────────────────
+  const hasJobSheet = d.issue_reported || d.work_carried_out || d.outcome ||
+                      (Array.isArray(d.parts_used) && d.parts_used.length) ||
+                      d.unused_kit || d.signature_path;
+
+  if (hasJobSheet) {
+    doc.addPage();
+    doc.fontSize(14).fillColor(BLUE).text('Job Sheet', { underline: true });
+    doc.moveDown(0.5);
+
+    const jobFields = [
+      ['Issue Reported',   d.issue_reported],
+      ['Work Carried Out', d.work_carried_out],
+      ['Outcome',          d.outcome],
+      ['Unused Kit',       d.unused_kit],
+    ];
+
+    jobFields.forEach(([label, value]) => {
+      if (!value) return;
+      doc.fontSize(9).fillColor(BLUE).font('Helvetica-Bold').text(label);
+      doc.fontSize(9).fillColor(GREY).font('Helvetica').text(value, { lineGap: 2 });
+      doc.moveDown(0.5);
+    });
+
+    // Parts table
+    const parts = (Array.isArray(d.parts_used) ? d.parts_used : []).filter((p) => p.name);
+    if (parts.length) {
+      doc.fontSize(9).fillColor(BLUE).font('Helvetica-Bold').text('Parts Used');
+      doc.moveDown(0.2);
+      const W    = doc.page.width - 100;
+      const qCol = 60;
+      const nCol = W - qCol;
+      let y = doc.y;
+      // header
+      doc.rect(50, y, W, 16).fill(BLUE);
+      doc.fontSize(8).fillColor('#fff').font('Helvetica-Bold')
+         .text('Part / Description', 55, y + 3, { width: nCol - 5 });
+      doc.text('Qty', 55 + nCol, y + 3, { width: qCol - 5, align: 'right' });
+      y += 16;
+      parts.forEach((p, i) => {
+        doc.rect(50, y, W, 16).fill(i % 2 === 0 ? LIGHT : '#fff');
+        doc.fontSize(8).fillColor(GREY).font('Helvetica')
+           .text(p.name || '', 55, y + 3, { width: nCol - 5 });
+        doc.text(String(p.quantity || 1), 55 + nCol, y + 3, { width: qCol - 5, align: 'right' });
+        y += 16;
+      });
+      doc.y = y + 8;
+    }
+
+    // Signature
+    if (d.signature_path && fs.existsSync(d.signature_path)) {
+      doc.moveDown(0.3);
+      doc.fontSize(9).fillColor(BLUE).font('Helvetica-Bold').text('Engineer Signature');
+      doc.moveDown(0.2);
+      const sigY = doc.y;
+      doc.rect(50, sigY, 260, 70).strokeColor('#ccc').lineWidth(0.5).stroke();
+      try {
+        doc.image(d.signature_path, 52, sigY + 2, { width: 256, height: 66, fit: [256, 66] });
+      } catch (_) {}
+      doc.y = sigY + 75;
+      doc.fontSize(9).fillColor(GREY).font('Helvetica').text(d.installer_name || '');
+    }
+  }
+
   // Photos — 2 per page, with OCR text block beneath each image
   // Layout per slot (A4 usable height ~742pt):
   //   Slot 0: label y=44, image y=60  fit=[495,250], OCR block y=315 h≤80
   //   Slot 1: label y=414, image y=430 fit=[495,250], OCR block y=685 h≤80
+  const workPhotoEntries = (d.work_photos || [])
+    .filter((p) => p && fs.existsSync(p))
+    .map((p, i) => [`Work Photo ${i + 1}`, `work_photo_${i}`, p]);
+
   const photoEntries = [
     ['System Photo',       'system_photo',       photos.system_photo],
     ['Network Photo',      'network_photo',      photos.network_photo],
     ['Server Photo',       'server_photo',       photos.server_photo],
     ['Registration Photo', 'registration_photo', photos.registration_photo],
     ['VIN Photo',          'vin_photo',          photos.vin_photo],
+    ...workPhotoEntries,
   ].filter(([, , p]) => p && fs.existsSync(p));
 
   let slot = 0;

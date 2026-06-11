@@ -177,6 +177,9 @@ function goTo(target) {
   currentPage = target;
   clearAlert();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Resize signature canvas once page 6 is actually visible
+  if (target === 6) requestAnimationFrame(resizeSignaturePad);
 }
 
 // ── Validation ─────────────────────────────────────────────────────────────────
@@ -253,23 +256,28 @@ function clearAlert() {
 
 // ── Signature pad ─────────────────────────────────────────────────────────────
 function initSignaturePad() {
-  const canvas  = document.getElementById('sig-canvas-main');
+  const canvas = document.getElementById('sig-canvas-main');
   if (!canvas || typeof SignaturePad === 'undefined') return;
-  const wrapper = document.getElementById('sig-wrapper-main');
-
-  function resize() {
-    const ratio   = window.devicePixelRatio || 1;
-    canvas.width  = wrapper.offsetWidth * ratio;
-    canvas.height = 130 * ratio;
-    canvas.getContext('2d').scale(ratio, ratio);
-    if (sigPad) sigPad.clear();
-  }
 
   sigPad = new SignaturePad(canvas, { penColor: '#003087', minWidth: 1.5, maxWidth: 3 });
-  resize();
-  window.addEventListener('resize', resize);
-
+  window.addEventListener('resize', resizeSignaturePad);
   document.getElementById('sig-clear-btn').addEventListener('click', () => sigPad.clear());
+  // Don't resize now — page 6 is hidden so offsetWidth is 0.
+  // resizeSignaturePad() is called by goTo(6) after the page becomes visible.
+}
+
+function resizeSignaturePad() {
+  const canvas  = document.getElementById('sig-canvas-main');
+  const wrapper = document.getElementById('sig-wrapper-main');
+  if (!canvas || !wrapper || !sigPad) return;
+  const w = wrapper.offsetWidth;
+  if (!w) return;
+  const data  = sigPad.toData();          // save strokes before resize
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width  = w * ratio;
+  canvas.height = 130 * ratio;
+  canvas.getContext('2d').scale(ratio, ratio);
+  sigPad.fromData(data);                  // restore strokes after resize
 }
 
 // ── Work photos ───────────────────────────────────────────────────────────────

@@ -609,7 +609,7 @@ select {
   position: relative;
   touch-action: none;
 }
-.sig-wrapper canvas { display: block; width: 100%; cursor: crosshair; border-radius: var(--radius); }
+.sig-wrapper canvas { display: block; width: 100%; cursor: crosshair; border-radius: var(--radius); touch-action: none; }
 .sig-hint-text {
   position: absolute;
   bottom: 8px; right: 10px;
