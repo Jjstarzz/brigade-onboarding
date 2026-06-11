@@ -99,6 +99,30 @@ router.get('/', (req, res) => {
     if (s in statusCounts) statusCounts[s]++;
   });
 
+  // ── Weekly installs (last 8 weeks) ────────────────────────────────────────
+  const weekLabels = [];
+  const weekCounts = [];
+  for (let w = 7; w >= 0; w--) {
+    const endD   = new Date(); endD.setDate(endD.getDate() - w * 7);
+    const startD = new Date(endD); startD.setDate(startD.getDate() - 6);
+    const startStr = startD.toISOString().slice(0, 10);
+    const endStr   = endD.toISOString().slice(0, 10);
+    const count = allRows.filter((r) => {
+      const dt = (r.created_at || '').slice(0, 10);
+      return dt >= startStr && dt <= endStr;
+    }).length;
+    const dd = startD.getDate().toString().padStart(2, '0');
+    const mm = (startD.getMonth() + 1).toString().padStart(2, '0');
+    weekLabels.push(`${dd}/${mm}`);
+    weekCounts.push(count);
+  }
+
+  // ── All-time product counts ───────────────────────────────────────────────
+  const allProductCounts = {};
+  allRows.forEach((r) => {
+    if (r.product_type) allProductCounts[r.product_type] = (allProductCounts[r.product_type] || 0) + 1;
+  });
+
   // ── Build stat cards ──────────────────────────────────────────────────────
   const productStatCards = Object.entries(productCounts)
     .sort((a, b) => b[1] - a[1])
@@ -191,11 +215,19 @@ router.get('/', (req, res) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Brigade Admin — Submissions</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, Arial, sans-serif; background: #f4f6fa; color: #1a1a1a; }
     header { background: #003087; color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
     header h1 { font-size: 1.1rem; }
+
+    /* Charts */
+    .charts-section { padding: 20px 24px 0; }
+    .charts-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; margin-bottom: 4px; }
+    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-card { background: #fff; border-radius: 8px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .chart-card h3 { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: #555; margin-bottom: 10px; }
 
     /* Stats */
     .stats-section { padding: 20px 24px 0; }
@@ -281,6 +313,24 @@ router.get('/', (req, res) => {
     </div>
   </div>
 
+  <!-- Charts -->
+  <div class="charts-section">
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>Installs per week — last 8 weeks</h3>
+        <canvas id="weeklyChart" height="120"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>By product type</h3>
+        <canvas id="productChart" height="120"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>By status</h3>
+        <canvas id="statusChart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+
   <!-- Filter -->
   <div class="filter-section" style="padding-top:20px">
     <form class="filter-form" method="GET" action="/admin">
@@ -349,6 +399,51 @@ router.get('/', (req, res) => {
   </div>
 
   <script>
+    // ── Charts ──────────────────────────────────────────────────────────────
+    (function () {
+      const COLORS = ['#003087','#0057c8','#1a7a3f','#c0392b','#6a3d9a','#e67e22','#16a085'];
+
+      // Weekly bar chart
+      const weekly = ${JSON.stringify({ labels: weekLabels, counts: weekCounts })};
+      new Chart(document.getElementById('weeklyChart'), {
+        type: 'bar',
+        data: {
+          labels: weekly.labels,
+          datasets: [{ data: weekly.counts, backgroundColor: '#003087', borderRadius: 4, borderSkipped: false }],
+        },
+        options: {
+          plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => 'w/c ' + i[0].label } } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eee' } }, x: { grid: { display: false } } },
+        },
+      });
+
+      // Product doughnut
+      const prod = ${JSON.stringify(allProductCounts)};
+      const prodKeys = Object.keys(prod);
+      if (prodKeys.length) {
+        new Chart(document.getElementById('productChart'), {
+          type: 'doughnut',
+          data: { labels: prodKeys, datasets: [{ data: prodKeys.map((k) => prod[k]), backgroundColor: COLORS, borderWidth: 1 }] },
+          options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } } }, cutout: '60%' },
+        });
+      } else {
+        document.getElementById('productChart').parentElement.innerHTML += '<p style="text-align:center;color:#aaa;font-size:.8rem;padding-top:20px">No data yet</p>';
+        document.getElementById('productChart').style.display = 'none';
+      }
+
+      // Status doughnut
+      const stat = ${JSON.stringify(statusCounts)};
+      const statColors = { Pending:'#aaa', Reviewed:'#0057c8', Approved:'#1a7a3f', Flagged:'#c0392b' };
+      new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(stat),
+          datasets: [{ data: Object.values(stat), backgroundColor: Object.keys(stat).map((k) => statColors[k]), borderWidth: 1 }],
+        },
+        options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } } }, cutout: '60%' },
+      });
+    })();
+
     async function updateStatus(sel) {
       const id     = sel.dataset.id;
       const status = sel.value;
