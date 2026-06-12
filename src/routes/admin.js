@@ -132,13 +132,13 @@ router.get('/', (req, res) => {
     .map(([p, c]) => `
       <div class="stat-card">
         <div class="stat-value">${c}</div>
-        <div class="stat-label"><strong>${esc(p)}</strong>this month</div>
+        <div class="stat-label"><strong>${esc(p)}</strong><span>this month</span></div>
       </div>`).join('');
 
   const statusStatCards = STATUSES.map((s) => {
     const m = STATUS_META[s];
     return `
-      <div class="stat-card" style="border-top:3px solid ${m.colour}">
+      <div class="stat-card" style="border-left-color:${m.colour}">
         <div class="stat-value" style="color:${m.colour}">${statusCounts[s]}</div>
         <div class="stat-label"><strong>${s}</strong></div>
       </div>`;
@@ -221,109 +221,94 @@ router.get('/', (req, res) => {
   <script src="/chart.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #eef1f7; color: #1a1a2e; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1e293b; }
 
     /* Header */
     header {
-      background: linear-gradient(135deg, #003087 0%, #00245c 100%);
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
       color: #fff; padding: 0 28px;
-      display: flex; justify-content: space-between; align-items: stretch;
-      box-shadow: 0 2px 8px rgba(0,0,48,.25);
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 12px rgba(30,58,95,.3); min-height: 64px;
     }
-    .header-brand { display: flex; align-items: center; gap: 14px; padding: 18px 0; }
-    .header-logo { width: 42px; height: 42px; flex-shrink: 0; }
-    .header-title { font-size: 1.05rem; font-weight: 700; letter-spacing: .01em; }
-    .header-subtitle { font-size: .72rem; opacity: .65; margin-top: 2px; }
-    .header-meta { display: flex; align-items: center; gap: 20px; font-size: .8rem; opacity: .8; }
-    .header-date { background: rgba(255,255,255,.1); padding: 6px 12px; border-radius: 6px; }
+    .header-brand { display: flex; align-items: center; gap: 12px; padding: 14px 0; }
+    .header-logo { width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: rgba(255,255,255,.15); padding: 3px; }
+    .header-title { font-size: 1rem; font-weight: 700; }
+    .header-subtitle { font-size: .7rem; opacity: .7; margin-top: 1px; }
+    .header-date { font-size: .78rem; background: rgba(255,255,255,.15); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,.2); white-space: nowrap; }
 
     /* Section headings */
     .section-heading {
-      font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
-      color: #003087; margin-bottom: 12px;
+      font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+      color: #64748b; margin-bottom: 14px;
       display: flex; align-items: center; gap: 8px;
     }
-    .section-heading::before {
-      content: ''; display: block; width: 3px; height: 14px;
-      background: #003087; border-radius: 2px;
-    }
+    .section-heading::before { content: ''; display: block; width: 3px; height: 12px; background: #2563eb; border-radius: 2px; }
 
     /* Stats */
     .stats-section { padding: 24px 28px 0; }
     .stats-row { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 24px; }
     .stat-card {
-      background: #fff; border-radius: 10px; padding: 16px 20px; min-width: 118px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,48,.06);
-      border-top: 3px solid #003087; text-align: center;
+      background: #fff; border-radius: 12px; padding: 18px 20px; min-width: 120px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.06);
+      border-left: 4px solid #2563eb;
       transition: transform .15s, box-shadow .15s;
     }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,48,.12); }
-    .stat-value { font-size: 2rem; font-weight: 800; color: #003087; line-height: 1; }
-    .stat-label { font-size: .72rem; color: #777; margin-top: 5px; line-height: 1.4; }
-    .stat-label strong { display: block; font-size: .8rem; color: #333; font-weight: 600; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,.1); }
+    .stat-value { font-size: 2rem; font-weight: 800; color: #1e293b; line-height: 1; }
+    .stat-label strong { display: block; font-size: .82rem; color: #475569; font-weight: 600; margin-top: 5px; }
+    .stat-label span { font-size: .7rem; color: #94a3b8; }
 
     /* Charts */
-    .charts-section { padding: 0 28px 0; }
+    .charts-section { padding: 0 28px; }
     .charts-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
     @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
-    .chart-card {
-      background: #fff; border-radius: 10px; padding: 18px 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,48,.06);
-    }
-    .chart-card h3 { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: #888; margin-bottom: 12px; font-weight: 600; }
+    .chart-card { background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.06); }
+    .chart-card h3 { font-size: .67rem; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 12px; font-weight: 700; }
 
     /* Filter */
     .filter-section { padding: 0 28px 20px; }
     .filter-form {
-      background: #fff; border-radius: 10px; padding: 18px 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,48,.06);
+      background: #fff; border-radius: 12px; padding: 18px 20px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.06);
       display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
     }
-    .filter-group { display: flex; flex-direction: column; gap: 5px; }
-    .filter-group label { font-size: .68rem; font-weight: 700; color: #003087; text-transform: uppercase; letter-spacing: .06em; }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-group label { font-size: .67rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .07em; }
     .filter-group input, .filter-group select {
-      padding: 8px 11px; border: 1.5px solid #dde3ef; border-radius: 7px;
-      font-size: .875rem; min-width: 140px; background: #f8fafd; transition: border-color .15s;
+      padding: 8px 11px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+      font-size: .875rem; min-width: 140px; background: #f8fafc; color: #1e293b;
+      transition: border-color .15s, background .15s, box-shadow .15s;
     }
-    .filter-group input:focus, .filter-group select:focus { outline: none; border-color: #003087; background: #fff; }
+    .filter-group input:focus, .filter-group select:focus { outline: none; border-color: #2563eb; background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
     .filter-actions { display: flex; gap: 8px; }
 
     /* Toolbar */
     .toolbar { padding: 0 28px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
     .btn {
-      padding: 9px 18px; background: #003087; color: #fff; border: none; border-radius: 7px;
+      padding: 9px 18px; background: #2563eb; color: #fff; border: none; border-radius: 8px;
       cursor: pointer; text-decoration: none; font-size: .875rem; font-weight: 600;
-      white-space: nowrap; transition: background .15s, transform .1s;
+      white-space: nowrap; transition: background .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 1px 4px rgba(37,99,235,.25);
     }
-    .btn:hover { background: #0057c8; transform: translateY(-1px); }
+    .btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,.4); }
     .btn:active { transform: none; }
-    .btn-ghost { background: transparent; color: #003087; border: 1.5px solid #003087; }
-    .btn-ghost:hover { background: #eef1f7; }
-    .count { font-size: .875rem; color: #666; }
-    .filter-active {
-      font-size: .78rem; background: #fff8e1; color: #7d5a00; padding: 5px 12px;
-      border-radius: 20px; border: 1px solid #ffc107; font-weight: 600;
-    }
+    .btn-ghost { background: #fff; color: #2563eb; border: 1.5px solid #2563eb; box-shadow: none; }
+    .btn-ghost:hover { background: #eff6ff; box-shadow: none; }
+    .count { font-size: .875rem; color: #64748b; }
+    .filter-active { font-size: .78rem; background: #fefce8; color: #854d0e; padding: 5px 12px; border-radius: 20px; border: 1px solid #fde047; font-weight: 600; }
 
     /* Table */
     .table-wrap { overflow-x: auto; padding: 0 28px 48px; }
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px;
-      overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,48,.06); }
-    th {
-      background: #003087; color: #fff; padding: 11px 13px; text-align: left;
-      font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
-    }
-    td { padding: 10px 13px; font-size: .855rem; border-bottom: 1px solid #eef1f7; white-space: nowrap; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.06); }
+    th { background: #1e293b; color: #cbd5e1; padding: 11px 13px; text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+    td { padding: 11px 13px; font-size: .855rem; border-bottom: 1px solid #f1f5f9; white-space: nowrap; color: #334155; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #f4f7fd; }
-    a { color: #003087; font-weight: 500; }
-    .empty { text-align: center; padding: 48px; color: #aaa; white-space: normal; font-size: .9rem; }
+    tr:hover td { background: #f8fafc; }
+    a { color: #2563eb; font-weight: 500; }
+    .empty { text-align: center; padding: 48px; color: #94a3b8; white-space: normal; font-size: .9rem; }
 
     /* Status */
-    .status-sel { padding: 5px 10px; border-radius: 20px; border: 1.5px solid; font-size: .78rem;
-      font-weight: 700; cursor: pointer; appearance: none; -webkit-appearance: none;
-      padding-right: 22px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 7px center; }
+    .status-sel { padding: 5px 10px; border-radius: 20px; border: 1.5px solid; font-size: .78rem; font-weight: 700; cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 22px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 7px center; }
     .status-sel:focus { outline: none; }
     .status-saving { opacity: .5; pointer-events: none; }
     .status-saved { animation: flash .4s ease; }
@@ -331,15 +316,14 @@ router.get('/', (req, res) => {
 
     /* Mobile */
     @media (max-width: 640px) {
-      header { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; }
-      .header-meta { width: 100%; }
+      header { flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
       .stats-section, .charts-section, .filter-section, .toolbar { padding-left: 16px; padding-right: 16px; }
       .table-wrap { padding: 0 0 40px; }
-      .stat-card { min-width: calc(50% - 7px); flex: 1 1 calc(50% - 7px); }
+      .stat-card { min-width: calc(50% - 7px); flex: 1 1 calc(50% - 7px); padding: 14px 16px; }
       .stat-value { font-size: 1.6rem; }
       .filter-form { padding: 14px; }
-      .filter-group input, .filter-group select { min-width: 0; width: 100%; }
       .filter-group { flex: 1 1 calc(50% - 7px); }
+      .filter-group input, .filter-group select { min-width: 0; width: 100%; }
       .filter-actions { width: 100%; }
       .filter-actions .btn { flex: 1; text-align: center; }
       th, td { padding: 9px 10px; font-size: .8rem; }
@@ -366,17 +350,17 @@ router.get('/', (req, res) => {
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-value">${monthRows.length}</div>
-        <div class="stat-label"><strong>Installs</strong>this month</div>
+        <div class="stat-label"><strong>Installs</strong><span>this month</span></div>
       </div>
-      <div class="stat-card" style="border-top-color:#0057c8">
-        <div class="stat-value" style="color:#0057c8">${allRows.length}</div>
-        <div class="stat-label"><strong>Total</strong>all time</div>
+      <div class="stat-card" style="border-left-color:#7c3aed">
+        <div class="stat-value" style="color:#7c3aed">${allRows.length}</div>
+        <div class="stat-label"><strong>Total</strong><span>all time</span></div>
       </div>
       ${productStatCards}
       ${topInstaller ? `
-      <div class="stat-card" style="border-top-color:#6a3d9a">
-        <div class="stat-value" style="color:#6a3d9a">${topInstaller[1]}</div>
-        <div class="stat-label"><strong>${esc(topInstaller[0])}</strong>top installer</div>
+      <div class="stat-card" style="border-left-color:#0891b2">
+        <div class="stat-value" style="color:#0891b2">${topInstaller[1]}</div>
+        <div class="stat-label"><strong>${esc(topInstaller[0])}</strong><span>top installer</span></div>
       </div>` : ''}
     </div>
     <div class="section-heading">Status Overview</div>
@@ -459,13 +443,13 @@ router.get('/', (req, res) => {
           <th>Fleet/Company</th><th>Depot</th><th>Install Date</th>
           <th>Installer</th><th>Company</th><th>Mobile</th><th>Email</th>
           <th>Comments</th>
-          <th style="background:#00245c">Issue Reported</th>
-          <th style="background:#00245c">Work Carried Out</th>
-          <th style="background:#00245c">Outcome</th>
-          <th style="background:#00245c">Parts Used</th>
-          <th style="background:#00245c">Unused Kit</th>
-          <th style="background:#00245c">Sig</th>
-          <th style="background:#00245c">Work Photos</th>
+          <th style="background:#0f4c75">Issue Reported</th>
+          <th style="background:#0f4c75">Work Carried Out</th>
+          <th style="background:#0f4c75">Outcome</th>
+          <th style="background:#0f4c75">Parts Used</th>
+          <th style="background:#0f4c75">Unused Kit</th>
+          <th style="background:#0f4c75">Sig</th>
+          <th style="background:#0f4c75">Work Photos</th>
           <th>Status</th><th>PDF</th>
         </tr>
       </thead>
