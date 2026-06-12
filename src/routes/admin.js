@@ -231,11 +231,7 @@ router.get('/', (req, res) => {
       box-shadow: 0 2px 8px rgba(0,0,48,.25);
     }
     .header-brand { display: flex; align-items: center; gap: 14px; padding: 18px 0; }
-    .header-logo {
-      width: 38px; height: 38px; background: rgba(255,255,255,.15);
-      border-radius: 8px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem; font-weight: 900; letter-spacing: -1px; color: #fff; flex-shrink: 0;
-    }
+    .header-logo { width: 42px; height: 42px; flex-shrink: 0; }
     .header-title { font-size: 1.05rem; font-weight: 700; letter-spacing: .01em; }
     .header-subtitle { font-size: .72rem; opacity: .65; margin-top: 2px; }
     .header-meta { display: flex; align-items: center; gap: 20px; font-size: .8rem; opacity: .8; }
@@ -332,12 +328,28 @@ router.get('/', (req, res) => {
     .status-saving { opacity: .5; pointer-events: none; }
     .status-saved { animation: flash .4s ease; }
     @keyframes flash { 0%,100% { opacity:1 } 50% { opacity:.3 } }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      header { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; }
+      .header-meta { width: 100%; }
+      .stats-section, .charts-section, .filter-section, .toolbar { padding-left: 16px; padding-right: 16px; }
+      .table-wrap { padding: 0 0 40px; }
+      .stat-card { min-width: calc(50% - 7px); flex: 1 1 calc(50% - 7px); }
+      .stat-value { font-size: 1.6rem; }
+      .filter-form { padding: 14px; }
+      .filter-group input, .filter-group select { min-width: 0; width: 100%; }
+      .filter-group { flex: 1 1 calc(50% - 7px); }
+      .filter-actions { width: 100%; }
+      .filter-actions .btn { flex: 1; text-align: center; }
+      th, td { padding: 9px 10px; font-size: .8rem; }
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="header-brand">
-      <div class="header-logo">BE</div>
+      <img src="/brigade-bot-avatar.svg" alt="Brigade" class="header-logo">
       <div>
         <div class="header-title">Brigade Electronics</div>
         <div class="header-subtitle">Installation Records — Admin Portal</div>

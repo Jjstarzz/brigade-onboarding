@@ -684,4 +684,19 @@ select {
   #camera-channels { grid-template-columns: 1fr; }
 
   .step-label { display: none; }
+
+  /* Header: hide Resources link text, show as icon-only on very small */
+  .site-header { padding: 12px 14px; gap: 10px; }
+  .site-header h1 { font-size: 1rem; }
+  .header-logo-img { height: 36px; }
+  .header-resources-link { font-size: 0; padding: 6px 8px; }
+  .header-resources-link::after { content: '↗'; font-size: .85rem; }
+
+  /* Parts table: stack on tiny screens */
+  .parts-header { grid-template-columns: 1fr 72px 36px; }
+  .parts-row    { grid-template-columns: 1fr 72px 36px; }
+
+  /* Nav buttons full-width */
+  .nav-buttons { flex-direction: column; }
+  .nav-buttons button, .nav-buttons .btn-submit { width: 100%; }
 }
