@@ -64,7 +64,7 @@ function statusSelect(id, current) {
 
 // ── GET /admin ────────────────────────────────────────────────────────────────
 router.get('/', (req, res) => {
-  const { date_from, date_to, product_type, fleet_company, installer } = req.query;
+  const { date_from, date_to, product_type, fleet_company, installer, vehicle_reg } = req.query;
 
   const allRows = db.getAll();
 
@@ -77,6 +77,9 @@ router.get('/', (req, res) => {
     (r.fleet_company || '').toLowerCase().includes(fleet_company.toLowerCase()));
   if (installer)    rows = rows.filter((r) =>
     (r.installer_name || '').toLowerCase().includes(installer.toLowerCase()));
+  if (vehicle_reg)  rows = rows.filter((r) =>
+    (r.vehicle_registration || '').replace(/\s/g, '').toLowerCase()
+      .includes(vehicle_reg.replace(/\s/g, '').toLowerCase()));
 
   // ── Stats (always from all rows) ──────────────────────────────────────────
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -207,7 +210,7 @@ router.get('/', (req, res) => {
     `<option value="${p}" ${product_type === p ? 'selected' : ''}>${p}</option>`
   ).join('');
 
-  const isFiltered = date_from || date_to || product_type || fleet_company || installer;
+  const isFiltered = date_from || date_to || product_type || fleet_company || installer || vehicle_reg;
 
   res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -215,7 +218,7 @@ router.get('/', (req, res) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Brigade Admin — Submissions</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="/chart.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, Arial, sans-serif; background: #f4f6fa; color: #1a1a1a; }
@@ -356,6 +359,10 @@ router.get('/', (req, res) => {
       <div class="filter-group">
         <label>Installer</label>
         <input type="text" name="installer" value="${escAttr(installer)}" placeholder="Any">
+      </div>
+      <div class="filter-group">
+        <label>Vehicle Reg</label>
+        <input type="text" name="vehicle_reg" value="${escAttr(vehicle_reg)}" placeholder="e.g. AB12CDE">
       </div>
       <div class="filter-actions">
         <button type="submit" class="btn">Filter</button>
