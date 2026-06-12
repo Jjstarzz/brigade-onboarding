@@ -231,7 +231,7 @@ router.get('/', (req, res) => {
       box-shadow: 0 2px 12px rgba(30,58,95,.3); min-height: 64px;
     }
     .header-brand { display: flex; align-items: center; gap: 12px; padding: 14px 0; }
-    .header-logo { width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: rgba(255,255,255,.15); padding: 3px; }
+    .header-logo { height: 38px; width: auto; flex-shrink: 0; border-radius: 4px; }
     .header-title { font-size: 1rem; font-weight: 700; }
     .header-subtitle { font-size: .7rem; opacity: .7; margin-top: 1px; }
     .header-date { font-size: .78rem; background: rgba(255,255,255,.15); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,.2); white-space: nowrap; }
@@ -333,7 +333,7 @@ router.get('/', (req, res) => {
 <body>
   <header>
     <div class="header-brand">
-      <img src="/brigade-bot-avatar.svg" alt="Brigade" class="header-logo">
+      <img src="/blue logo.png" alt="Brigade" class="header-logo">
       <div>
         <div class="header-title">Brigade Electronics</div>
         <div class="header-subtitle">Installation Records — Admin Portal</div>
