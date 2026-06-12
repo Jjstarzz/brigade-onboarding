@@ -34,28 +34,29 @@ body {
 
 /* ── Header ────────────────────────────────────────────────────────────────── */
 .site-header {
-  background: var(--brand-blue);
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
   color: #fff;
-  padding: 16px 20px;
+  padding: 14px 20px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  box-shadow: 0 2px 12px rgba(30,58,95,.3);
 }
 
-.site-header h1 { font-size: 1.15rem; font-weight: 700; }
-.site-header p  { font-size: 0.78rem; opacity: .75; margin-top: 2px; }
+.site-header h1 { font-size: 1.05rem; font-weight: 700; }
+.site-header p  { font-size: 0.72rem; opacity: .7; margin-top: 2px; }
 
 .header-logo {
-  width: 44px; height: 44px;
-  background: #fff;
-  border-radius: 6px;
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,.15);
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 900; color: var(--brand-blue); font-size: 1rem;
+  font-weight: 900; color: #fff; font-size: 1rem;
   flex-shrink: 0;
 }
 
 .header-logo-img {
-  height: 44px;
+  height: 40px;
   width: auto;
   flex-shrink: 0;
   border-radius: 4px;
@@ -201,8 +202,8 @@ main {
   transition: var(--transition);
 }
 
-.step-indicator.active  .step-circle { background: var(--brand-blue); color: #fff; }
-.step-indicator.done    .step-circle { background: var(--success);     color: #fff; }
+.step-indicator.active  .step-circle { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,.35); }
+.step-indicator.done    .step-circle { background: var(--success); color: #fff; }
 
 .step-label {
   font-size: 0.65rem;
@@ -211,7 +212,7 @@ main {
   max-width: 68px;
 }
 
-.step-indicator.active .step-label { color: var(--brand-blue); font-weight: 600; }
+.step-indicator.active .step-label { color: var(--accent); font-weight: 600; }
 
 /* ── Form pages ────────────────────────────────────────────────────────────── */
 .form-page { display: none; }
@@ -254,7 +255,7 @@ textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0,87,200,.15);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
 }
 
 input.invalid, select.invalid, textarea.invalid {
@@ -388,21 +389,22 @@ select {
 }
 
 .btn-primary {
-  background: var(--brand-blue);
+  background: var(--accent);
   color: #fff;
+  box-shadow: 0 1px 4px rgba(37,99,235,.25);
 }
 
-.btn-primary:hover  { background: var(--accent); }
-.btn-primary:active { transform: scale(.98); }
-.btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+.btn-primary:hover  { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,.4); }
+.btn-primary:active { transform: none; box-shadow: none; }
+.btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .btn-secondary {
-  background: var(--bg);
-  color: var(--brand-blue);
-  border: 1.5px solid var(--brand-blue);
+  background: #fff;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
 }
 
-.btn-secondary:hover { background: var(--brand-light); }
+.btn-secondary:hover { background: #eff6ff; }
 
 /* ── Vehicle info box ──────────────────────────────────────────────────────── */
 #vehicle-info-box {
@@ -416,7 +418,7 @@ select {
 }
 
 #vehicle-info-box.visible { display: block; }
-#vehicle-info-box strong { color: var(--brand-blue); }
+#vehicle-info-box strong { color: var(--accent); }
 
 /* ── Spinner / loading ─────────────────────────────────────────────────────── */
 .spinner-overlay {
@@ -505,14 +507,14 @@ select {
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   background: var(--brand-light);
-  color: var(--brand-blue);
+  color: var(--accent);
   font-size: 1.2rem;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: var(--transition);
 }
 
-.scan-btn:hover { background: var(--brand-blue); color: #fff; border-color: var(--brand-blue); }
+.scan-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 .scanner-modal {
   display: none;
