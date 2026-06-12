@@ -444,13 +444,13 @@ router.get('/', (req, res) => {
           <th>Fleet/Company</th><th>Depot</th><th>Install Date</th>
           <th>Installer</th><th>Company</th><th>Mobile</th><th>Email</th>
           <th>Comments</th>
-          <th style="background:#0f4c75">Issue Reported</th>
-          <th style="background:#0f4c75">Work Carried Out</th>
-          <th style="background:#0f4c75">Outcome</th>
-          <th style="background:#0f4c75">Parts Used</th>
-          <th style="background:#0f4c75">Unused Kit</th>
-          <th style="background:#0f4c75">Sig</th>
-          <th style="background:#0f4c75">Work Photos</th>
+          <th>Issue Reported</th>
+          <th>Work Carried Out</th>
+          <th>Outcome</th>
+          <th>Parts Used</th>
+          <th>Unused Kit</th>
+          <th>Sig</th>
+          <th>Work Photos</th>
           <th>Status</th><th>PDF</th>
         </tr>
       </thead>
