@@ -132,7 +132,7 @@ router.get('/', (req, res) => {
     .map(([p, c]) => `
       <div class="stat-card">
         <div class="stat-value">${c}</div>
-        <div class="stat-label">${esc(p)}<br><span style="font-size:.7rem;opacity:.7">this month</span></div>
+        <div class="stat-label"><strong>${esc(p)}</strong>this month</div>
       </div>`).join('');
 
   const statusStatCards = STATUSES.map((s) => {
@@ -140,7 +140,7 @@ router.get('/', (req, res) => {
     return `
       <div class="stat-card" style="border-top:3px solid ${m.colour}">
         <div class="stat-value" style="color:${m.colour}">${statusCounts[s]}</div>
-        <div class="stat-label">${s}</div>
+        <div class="stat-label"><strong>${s}</strong></div>
       </div>`;
   }).join('');
 
@@ -221,103 +221,161 @@ router.get('/', (req, res) => {
   <script src="/chart.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, Arial, sans-serif; background: #f4f6fa; color: #1a1a1a; }
-    header { background: #003087; color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { font-size: 1.1rem; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #eef1f7; color: #1a1a2e; }
 
-    /* Charts */
-    .charts-section { padding: 20px 24px 0; }
-    .charts-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; margin-bottom: 4px; }
-    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
-    .chart-card { background: #fff; border-radius: 8px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-    .chart-card h3 { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: #555; margin-bottom: 10px; }
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #003087 0%, #00245c 100%);
+      color: #fff; padding: 0 28px;
+      display: flex; justify-content: space-between; align-items: stretch;
+      box-shadow: 0 2px 8px rgba(0,0,48,.25);
+    }
+    .header-brand { display: flex; align-items: center; gap: 14px; padding: 18px 0; }
+    .header-logo {
+      width: 38px; height: 38px; background: rgba(255,255,255,.15);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 900; letter-spacing: -1px; color: #fff; flex-shrink: 0;
+    }
+    .header-title { font-size: 1.05rem; font-weight: 700; letter-spacing: .01em; }
+    .header-subtitle { font-size: .72rem; opacity: .65; margin-top: 2px; }
+    .header-meta { display: flex; align-items: center; gap: 20px; font-size: .8rem; opacity: .8; }
+    .header-date { background: rgba(255,255,255,.1); padding: 6px 12px; border-radius: 6px; }
+
+    /* Section headings */
+    .section-heading {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+      color: #003087; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-heading::before {
+      content: ''; display: block; width: 3px; height: 14px;
+      background: #003087; border-radius: 2px;
+    }
 
     /* Stats */
-    .stats-section { padding: 20px 24px 0; }
-    .stats-section h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: #555; margin-bottom: 10px; }
-    .stats-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-    .stat-card { background: #fff; border-radius: 8px; padding: 14px 18px; min-width: 110px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.08); border-top: 3px solid #003087; text-align: center; }
-    .stat-value { font-size: 1.8rem; font-weight: 700; color: #003087; line-height: 1; }
-    .stat-label { font-size: .75rem; color: #666; margin-top: 4px; line-height: 1.3; }
+    .stats-section { padding: 24px 28px 0; }
+    .stats-row { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 24px; }
+    .stat-card {
+      background: #fff; border-radius: 10px; padding: 16px 20px; min-width: 118px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,48,.06);
+      border-top: 3px solid #003087; text-align: center;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,48,.12); }
+    .stat-value { font-size: 2rem; font-weight: 800; color: #003087; line-height: 1; }
+    .stat-label { font-size: .72rem; color: #777; margin-top: 5px; line-height: 1.4; }
+    .stat-label strong { display: block; font-size: .8rem; color: #333; font-weight: 600; }
+
+    /* Charts */
+    .charts-section { padding: 0 28px 0; }
+    .charts-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: #fff; border-radius: 10px; padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,48,.06);
+    }
+    .chart-card h3 { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: #888; margin-bottom: 12px; font-weight: 600; }
 
     /* Filter */
-    .filter-section { padding: 0 24px 16px; }
-    .filter-form { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
-      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
-    .filter-group { display: flex; flex-direction: column; gap: 4px; }
-    .filter-group label { font-size: .75rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: .04em; }
-    .filter-group input, .filter-group select { padding: 7px 10px; border: 1px solid #ccc; border-radius: 6px;
-      font-size: .875rem; min-width: 140px; }
+    .filter-section { padding: 0 28px 20px; }
+    .filter-form {
+      background: #fff; border-radius: 10px; padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,48,.06);
+      display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 5px; }
+    .filter-group label { font-size: .68rem; font-weight: 700; color: #003087; text-transform: uppercase; letter-spacing: .06em; }
+    .filter-group input, .filter-group select {
+      padding: 8px 11px; border: 1.5px solid #dde3ef; border-radius: 7px;
+      font-size: .875rem; min-width: 140px; background: #f8fafd; transition: border-color .15s;
+    }
+    .filter-group input:focus, .filter-group select:focus { outline: none; border-color: #003087; background: #fff; }
     .filter-actions { display: flex; gap: 8px; }
 
     /* Toolbar */
-    .toolbar { padding: 0 24px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .btn { padding: 8px 16px; background: #003087; color: #fff; border: none; border-radius: 6px;
-      cursor: pointer; text-decoration: none; font-size: .875rem; white-space: nowrap; }
-    .btn:hover { background: #0057c8; }
-    .btn-ghost { background: transparent; color: #003087; border: 1px solid #003087; }
-    .btn-ghost:hover { background: #f0f4fb; }
-    .count { font-size: .875rem; color: #555; }
-    .filter-active { font-size: .8rem; background: #fff3cd; color: #856404; padding: 4px 10px;
-      border-radius: 20px; border: 1px solid #ffc107; }
+    .toolbar { padding: 0 28px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      padding: 9px 18px; background: #003087; color: #fff; border: none; border-radius: 7px;
+      cursor: pointer; text-decoration: none; font-size: .875rem; font-weight: 600;
+      white-space: nowrap; transition: background .15s, transform .1s;
+    }
+    .btn:hover { background: #0057c8; transform: translateY(-1px); }
+    .btn:active { transform: none; }
+    .btn-ghost { background: transparent; color: #003087; border: 1.5px solid #003087; }
+    .btn-ghost:hover { background: #eef1f7; }
+    .count { font-size: .875rem; color: #666; }
+    .filter-active {
+      font-size: .78rem; background: #fff8e1; color: #7d5a00; padding: 5px 12px;
+      border-radius: 20px; border: 1px solid #ffc107; font-weight: 600;
+    }
 
     /* Table */
-    .table-wrap { overflow-x: auto; padding: 0 24px 40px; }
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px;
-      overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-    th { background: #003087; color: #fff; padding: 10px 12px; text-align: left;
-      font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
-    td { padding: 10px 12px; font-size: .875rem; border-bottom: 1px solid #eee; white-space: nowrap; }
+    .table-wrap { overflow-x: auto; padding: 0 28px 48px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px;
+      overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,48,.06); }
+    th {
+      background: #003087; color: #fff; padding: 11px 13px; text-align: left;
+      font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
+    }
+    td { padding: 10px 13px; font-size: .855rem; border-bottom: 1px solid #eef1f7; white-space: nowrap; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #f0f4fb; }
-    a { color: #003087; }
-    .empty { text-align: center; padding: 40px; color: #888; white-space: normal; }
+    tr:hover td { background: #f4f7fd; }
+    a { color: #003087; font-weight: 500; }
+    .empty { text-align: center; padding: 48px; color: #aaa; white-space: normal; font-size: .9rem; }
 
     /* Status */
-    .status-sel { padding: 4px 8px; border-radius: 20px; border: 1px solid; font-size: .8rem;
-      font-weight: 600; cursor: pointer; appearance: none; -webkit-appearance: none;
-      padding-right: 20px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 6px center; }
+    .status-sel { padding: 5px 10px; border-radius: 20px; border: 1.5px solid; font-size: .78rem;
+      font-weight: 700; cursor: pointer; appearance: none; -webkit-appearance: none;
+      padding-right: 22px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 7px center; }
     .status-sel:focus { outline: none; }
     .status-saving { opacity: .5; pointer-events: none; }
     .status-saved { animation: flash .4s ease; }
-    @keyframes flash { 0%,100% { opacity:1 } 50% { opacity:.4 } }
+    @keyframes flash { 0%,100% { opacity:1 } 50% { opacity:.3 } }
   </style>
 </head>
 <body>
   <header>
-    <h1>Brigade Electronics — Installation Records</h1>
-    <span style="font-size:.85rem;opacity:.75">${new Date().toLocaleDateString('en-GB')}</span>
+    <div class="header-brand">
+      <div class="header-logo">BE</div>
+      <div>
+        <div class="header-title">Brigade Electronics</div>
+        <div class="header-subtitle">Installation Records — Admin Portal</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span class="header-date">${new Date().toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' })}</span>
+    </div>
   </header>
 
   <!-- Stats -->
   <div class="stats-section">
-    <h2>This Month</h2>
+    <div class="section-heading">This Month</div>
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-value">${monthRows.length}</div>
-        <div class="stat-label">Installs<br><span style="font-size:.7rem;opacity:.7">this month</span></div>
+        <div class="stat-label"><strong>Installs</strong>this month</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">${allRows.length}</div>
-        <div class="stat-label">Total<br><span style="font-size:.7rem;opacity:.7">all time</span></div>
+      <div class="stat-card" style="border-top-color:#0057c8">
+        <div class="stat-value" style="color:#0057c8">${allRows.length}</div>
+        <div class="stat-label"><strong>Total</strong>all time</div>
       </div>
       ${productStatCards}
       ${topInstaller ? `
       <div class="stat-card" style="border-top-color:#6a3d9a">
         <div class="stat-value" style="color:#6a3d9a">${topInstaller[1]}</div>
-        <div class="stat-label">${esc(topInstaller[0])}<br><span style="font-size:.7rem;opacity:.7">top installer</span></div>
+        <div class="stat-label"><strong>${esc(topInstaller[0])}</strong>top installer</div>
       </div>` : ''}
     </div>
-    <h2>Status Overview</h2>
-    <div class="stats-row" style="margin-bottom:0">
+    <div class="section-heading">Status Overview</div>
+    <div class="stats-row" style="margin-bottom:24px">
       ${statusStatCards}
     </div>
   </div>
 
   <!-- Charts -->
   <div class="charts-section">
+    <div class="section-heading" style="margin-bottom:14px">Analytics</div>
     <div class="charts-row">
       <div class="chart-card">
         <h3>Installs per week — last 8 weeks</h3>
@@ -335,7 +393,7 @@ router.get('/', (req, res) => {
   </div>
 
   <!-- Filter -->
-  <div class="filter-section" style="padding-top:20px">
+  <div class="filter-section" style="padding-top:4px">
     <form class="filter-form" method="GET" action="/admin">
       <div class="filter-group">
         <label>From</label>
